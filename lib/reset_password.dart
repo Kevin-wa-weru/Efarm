@@ -1,17 +1,22 @@
+import 'package:eshamba/login.dart';
 import 'package:eshamba/otp.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class ForgotPassword extends StatefulWidget {
-  const ForgotPassword({Key? key}) : super(key: key);
+class ResetPassword extends StatefulWidget {
+  const ResetPassword({Key? key}) : super(key: key);
 
   @override
-  State<ForgotPassword> createState() => _ForgotPasswordState();
+  State<ResetPassword> createState() => _ResetPasswordState();
 }
 
-class _ForgotPasswordState extends State<ForgotPassword> {
-  final emailController = TextEditingController();
+class _ResetPasswordState extends State<ResetPassword> {
+  final passwordOneController = TextEditingController();
+  final passwordTwoController = TextEditingController();
+
+  bool obsecurePasswordOne = true;
+  bool obsecurePasswordTwo = true;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +66,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   width: MediaQuery.of(context).size.width * 0.053333333,
                 ),
                 const Text(
-                  'Forgot Password',
+                  'Reset new password ',
                   style: TextStyle(
                       color: Color(0xFF000000),
                       fontFamily: 'PublicSans',
@@ -78,25 +83,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     width: MediaQuery.of(context).size.width * 0.053333333,
                   ),
                   const Text(
-                    'Enter your email for the verification process, ',
-                    style: TextStyle(
-                        color: Color(0xFF000000),
-                        fontFamily: 'PublicSans',
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.053333333,
-                  ),
-                  const Text(
-                    'We will send a four digit code to your email ',
+                    'Enter your new password',
                     style: TextStyle(
                         color: Color(0xFF000000),
                         fontFamily: 'PublicSans',
@@ -114,12 +101,13 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: TextFormField(
+                  obscureText: obsecurePasswordOne,
                   style: const TextStyle(
                       color: Color(0xFF000000),
                       fontFamily: 'PublicSans',
                       fontWeight: FontWeight.w500,
                       fontSize: 14),
-                  keyboardType: TextInputType.emailAddress,
+                  keyboardType: TextInputType.name,
                   decoration: InputDecoration(
                     isDense: true,
                     fillColor: const Color(0xFFEFEFEF),
@@ -148,13 +136,39 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         height:
                             MediaQuery.of(context).size.height * 0.0147783251,
                         width: MediaQuery.of(context).size.width * 0.04,
-                        child: SvgPicture.asset('assets/icons/email.svg',
+                        child: SvgPicture.asset('assets/icons/password.svg',
                             color: const Color(0xFF39B54A),
                             fit: BoxFit.contain),
                       ),
                     ),
+                    suffix: InkWell(
+                      onTap: () {
+                        setState(() {
+                          obsecurePasswordOne = !obsecurePasswordOne;
+                        });
+                      },
+                      child: Transform.translate(
+                        offset: const Offset(0.0, 2.0),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              right:
+                                  MediaQuery.of(context).size.width * 0.05872),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height *
+                                0.0159729064,
+                            width:
+                                MediaQuery.of(context).size.width * 0.034586666,
+                            child: SvgPicture.asset('assets/icons/eye.svg',
+                                color: obsecurePasswordOne == false
+                                    ? const Color(0xFF39B54A)
+                                    : Colors.black,
+                                fit: BoxFit.contain),
+                          ),
+                        ),
+                      ),
+                    ),
                     filled: true,
-                    hintText: 'Email',
+                    hintText: 'Password',
                     hintStyle: const TextStyle(
                         color: Color(0xFF000000),
                         fontFamily: 'PublicSans',
@@ -164,7 +178,94 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   onChanged: (value) {
                     setState(() {});
                   },
-                  controller: emailController,
+                  controller: passwordOneController,
+                ),
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0.0, -15.0),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9633333,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextFormField(
+                    obscureText: obsecurePasswordTwo,
+                    style: const TextStyle(
+                        color: Color(0xFF000000),
+                        fontFamily: 'PublicSans',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14),
+                    keyboardType: TextInputType.name,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      fillColor: const Color(0xFFEFEFEF),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(33),
+                        borderSide: const BorderSide(
+                            color: Colors.transparent, width: 0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Colors.transparent, width: 0.2),
+                        borderRadius: BorderRadius.circular(33),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Colors.transparent, width: 2),
+                        borderRadius: BorderRadius.circular(33),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical:
+                            MediaQuery.of(context).size.height * 0.0197339,
+                      ),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 14, right: 14.0, bottom: 14.0, left: 24.5),
+                        child: SizedBox(
+                          height:
+                              MediaQuery.of(context).size.height * 0.0147783251,
+                          width: MediaQuery.of(context).size.width * 0.04,
+                          child: SvgPicture.asset('assets/icons/password.svg',
+                              color: const Color(0xFF39B54A),
+                              fit: BoxFit.contain),
+                        ),
+                      ),
+                      suffix: InkWell(
+                        onTap: () {
+                          setState(() {
+                            obsecurePasswordTwo = !obsecurePasswordTwo;
+                          });
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              right:
+                                  MediaQuery.of(context).size.width * 0.05872),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height *
+                                0.0159729064,
+                            width:
+                                MediaQuery.of(context).size.width * 0.034586666,
+                            child: SvgPicture.asset('assets/icons/eye.svg',
+                                color: obsecurePasswordTwo == false
+                                    ? const Color(0xFF39B54A)
+                                    : Colors.black,
+                                fit: BoxFit.contain),
+                          ),
+                        ),
+                      ),
+                      filled: true,
+                      hintText: 'Confirm Password',
+                      hintStyle: const TextStyle(
+                          color: Color(0xFF000000),
+                          fontFamily: 'PublicSans',
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14),
+                    ),
+                    onChanged: (value) {
+                      setState(() {});
+                    },
+                    controller: passwordTwoController,
+                  ),
                 ),
               ),
             ),
@@ -174,7 +275,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             InkWell(
               onTap: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const OTP()));
+                    MaterialPageRoute(builder: (context) => const Login()));
               },
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.0615763,
@@ -189,7 +290,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         ])),
                 child: const Center(
                   child: Text(
-                    'Continue',
+                    'Reset',
                     style: TextStyle(
                         color: Color(0xFFFFFFFF),
                         fontFamily: 'PublicSans',

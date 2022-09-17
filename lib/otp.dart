@@ -1,18 +1,16 @@
-import 'package:eshamba/otp.dart';
+import 'package:eshamba/reset_password.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 
-class ForgotPassword extends StatefulWidget {
-  const ForgotPassword({Key? key}) : super(key: key);
+class OTP extends StatefulWidget {
+  const OTP({Key? key}) : super(key: key);
 
   @override
-  State<ForgotPassword> createState() => _ForgotPasswordState();
+  State<OTP> createState() => _OTPState();
 }
 
-class _ForgotPasswordState extends State<ForgotPassword> {
-  final emailController = TextEditingController();
-
+class _OTPState extends State<OTP> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +76,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     width: MediaQuery.of(context).size.width * 0.053333333,
                   ),
                   const Text(
-                    'Enter your email for the verification process, ',
+                    'Enter the four digit code for the verification process, ',
                     style: TextStyle(
                         color: Color(0xFF000000),
                         fontFamily: 'PublicSans',
@@ -96,7 +94,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     width: MediaQuery.of(context).size.width * 0.053333333,
                   ),
                   const Text(
-                    'We will send a four digit code to your email ',
+                    'We have sent a four digit code to your email ',
                     style: TextStyle(
                         color: Color(0xFF000000),
                         fontFamily: 'PublicSans',
@@ -109,72 +107,63 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.060344827,
             ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.9633333,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextFormField(
-                  style: const TextStyle(
-                      color: Color(0xFF000000),
-                      fontFamily: 'PublicSans',
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14),
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    fillColor: const Color(0xFFEFEFEF),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(33),
-                      borderSide:
-                          const BorderSide(color: Colors.transparent, width: 0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Colors.transparent, width: 0.2),
-                      borderRadius: BorderRadius.circular(33),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: Colors.transparent, width: 2),
-                      borderRadius: BorderRadius.circular(33),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: MediaQuery.of(context).size.height * 0.0197339,
-                    ),
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(
-                          top: 14, right: 14.0, bottom: 14.0, left: 24.5),
-                      child: SizedBox(
-                        height:
-                            MediaQuery.of(context).size.height * 0.0147783251,
-                        width: MediaQuery.of(context).size.width * 0.04,
-                        child: SvgPicture.asset('assets/icons/email.svg',
-                            color: const Color(0xFF39B54A),
-                            fit: BoxFit.contain),
-                      ),
-                    ),
-                    filled: true,
-                    hintText: 'Email',
-                    hintStyle: const TextStyle(
-                        color: Color(0xFF000000),
-                        fontFamily: 'PublicSans',
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14),
-                  ),
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  controller: emailController,
+            OtpTextField(
+              numberOfFields: 4,
+              fillColor: const Color(0xFFEFEFEF),
+              borderColor: Colors.transparent,
+
+              hasCustomInputDecoration: true,
+              fieldWidth: MediaQuery.of(context).size.width * 0.16266666,
+              decoration: InputDecoration(
+                counterText: '',
+                isDense: true,
+                fillColor: const Color(0xFFEFEFEF),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(70),
+                  borderSide:
+                      const BorderSide(color: Colors.transparent, width: 0),
                 ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide:
+                      const BorderSide(color: Colors.transparent, width: 0.2),
+                  borderRadius: BorderRadius.circular(70),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                      const BorderSide(color: Colors.transparent, width: 2),
+                  borderRadius: BorderRadius.circular(70),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical:
+                      MediaQuery.of(context).size.height * 0.0301231527093596,
+                ),
+                filled: true,
               ),
+
+              showFieldAsBox: true,
+
+              onCodeChanged: (String code) {},
+
+              onSubmit: (String verificationCode) {
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text("Verification Code"),
+                        content: Text('Code entered is $verificationCode'),
+                      );
+                    });
+              }, // end onSubmit
             ),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.051724137,
             ),
             InkWell(
               onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const OTP()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ResetPassword()));
               },
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.0615763,
