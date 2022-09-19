@@ -36,7 +36,10 @@ class _OTPState extends State<OTP> {
                     Icons.arrow_back_ios,
                     size: 20,
                   ),
-                )
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.168,
+                ),
               ],
             ),
             SizedBox(
