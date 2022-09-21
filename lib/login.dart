@@ -282,25 +282,51 @@ class _LoginState extends State<Login> {
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.051724137,
                     ),
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.0615763,
-                      width: MediaQuery.of(context).size.width * 0.41066666,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              colors: [
-                                Color(0xFF7CD956),
-                                Color(0xFF3EA334),
-                              ])),
-                      child: const Center(
-                        child: Text(
-                          'Log In',
-                          style: TextStyle(
-                              color: Color(0xFFFFFFFF),
-                              fontFamily: 'PublicSans',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16),
+                    InkWell(
+                      onTap: () {
+                        if (emailController.text.isEmpty ||
+                            passwordController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                              "Fill in the Email/Password",
+                              style: TextStyle(
+                                color: Colors.red,
+                              ),
+                            )),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                              "Successfully Logged In ${emailController.text}",
+                              style: const TextStyle(
+                                color: Colors.white,
+                              ),
+                            )),
+                          );
+                        }
+                      },
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.0615763,
+                        width: MediaQuery.of(context).size.width * 0.41066666,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                colors: [
+                                  Color(0xFF7CD956),
+                                  Color(0xFF3EA334),
+                                ])),
+                        child: const Center(
+                          child: Text(
+                            'Log In',
+                            style: TextStyle(
+                                color: Color(0xFFFFFFFF),
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16),
+                          ),
                         ),
                       ),
                     ),
@@ -323,7 +349,7 @@ class _LoginState extends State<Login> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        const Registration()));
+                                         Registration()));
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

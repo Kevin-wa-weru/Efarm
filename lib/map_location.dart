@@ -34,8 +34,20 @@ class _MapLocationState extends State<MapLocation> {
     return Scaffold(
       bottomNavigationBar: InkWell(
         onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const WorkingHours()));
+          if (selectedLocation == const LatLng(0, 0)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                "Complete Filling The Location",
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              )),
+            );
+          } else {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const WorkingHours()));
+          }
         },
         child: Padding(
           padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20),

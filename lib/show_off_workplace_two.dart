@@ -18,8 +18,22 @@ class _ShowWorkPlaceTwoState extends State<ShowWorkPlaceTwo> {
       backgroundColor: Colors.white,
       bottomNavigationBar: InkWell(
         onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const Vendorprofile()));
+          if (productNameController.text.isEmpty ||
+              categoryController.text.isEmpty ||
+              priceController.text.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                "Complete Filling The Form",
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              )),
+            );
+          } else {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const Vendorprofile()));
+          }
         },
         child: Padding(
           padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20),

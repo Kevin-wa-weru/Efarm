@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,6 +16,37 @@ class _UpdateProfileState extends State<UpdateProfile> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  FilePickerResult? result;
+  String? fileName;
+  PlatformFile? pickedfile;
+  bool appisLoading = false;
+
+  File? fileTodisplay;
+  void pickfile() async {
+    try {
+      setState(() {
+        appisLoading = true;
+      });
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['png', 'pdf', 'jpg', 'jpeg'],
+        allowMultiple: false,
+      );
+      if (result != null) {
+        fileName = result!.files.first.name;
+        pickedfile = result!.files.first;
+        fileTodisplay = File(pickedfile!.path.toString());
+
+        print('filename $fileName');
+      }
+
+      setState(() {
+        appisLoading = false;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 
   bool obsecurePasswordOne = true;
 
@@ -61,26 +95,51 @@ class _UpdateProfileState extends State<UpdateProfile> {
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.05788177,
             ),
-            Center(
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.1331527093596059,
-                width: MediaQuery.of(context).size.width * 0.266666666,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(150.0),
-                    topRight: Radius.circular(150.0),
-                    bottomLeft: Radius.circular(150.0),
-                    topLeft: Radius.circular(150.0),
+            InkWell(
+              onTap: () {
+                pickfile();
+              },
+              child: Center(
+                child: Container(
+                  height:
+                      MediaQuery.of(context).size.height * 0.1331527093596059,
+                  width: MediaQuery.of(context).size.width * 0.266666666,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      bottomRight: Radius.circular(150.0),
+                      topRight: Radius.circular(150.0),
+                      bottomLeft: Radius.circular(150.0),
+                      topLeft: Radius.circular(150.0),
+                    ),
+                    color: Color(0xFFD9D9D9),
                   ),
-                  color: Color(0xFFD9D9D9),
-                ),
-                child: Center(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.0472413793,
-                    width: MediaQuery.of(context).size.width * 0.04866666,
-                    child: SvgPicture.asset('assets/icons/camera.svg',
-                        color: Colors.black, fit: BoxFit.contain),
-                  ),
+                  child: pickedfile == null
+                      ? Center(
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height *
+                                0.0472413793,
+                            width:
+                                MediaQuery.of(context).size.width * 0.04866666,
+                            child: SvgPicture.asset('assets/icons/camera.svg',
+                                color: Colors.black, fit: BoxFit.contain),
+                          ),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height *
+                                0.0472413793,
+                            width:
+                                MediaQuery.of(context).size.width * 0.04866666,
+                            child: Image.file(
+                              File(fileTodisplay!.path).absolute,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width *
+                                  0.04866666,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -275,7 +334,31 @@ class _UpdateProfileState extends State<UpdateProfile> {
               height: MediaQuery.of(context).size.height * 0.10714285,
             ),
             InkWell(
-              onTap: () {},
+              onTap: () {
+                if (nameController.text.isEmpty ||
+                    emailController.text.isEmpty ||
+                    passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                      "Complete Filling The Form",
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    )),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                      "Data has been updated successfully",
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    )),
+                  );
+                }
+              },
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.0615763,
                 width: MediaQuery.of(context).size.width * 0.8033333,

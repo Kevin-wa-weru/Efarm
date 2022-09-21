@@ -14,6 +14,8 @@ class WorkingHours extends StatefulWidget {
 class _WorkingHoursState extends State<WorkingHours> {
   bool istoggled = false;
 
+  String isdata = '';
+
   DateTime dateTimeOne = DateTime.now();
   DateTime dateTimeTwo = DateTime.now();
 
@@ -22,10 +24,22 @@ class _WorkingHoursState extends State<WorkingHours> {
     return Scaffold(
       bottomNavigationBar: InkWell(
         onTap: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const ShowWorkPlaceOne()));
+          if (dateTimeOne == DateTime.now() || dateTimeTwo == DateTime.now()) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                "Complete Filling The time",
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              )),
+            );
+          } else {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ShowWorkPlaceOne()));
+          }
         },
         child: Padding(
           padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20),
@@ -97,39 +111,44 @@ class _WorkingHoursState extends State<WorkingHours> {
                           fontWeight: FontWeight.w400,
                           fontSize: 14),
                     ),
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.4933333,
-                      color: Colors.transparent,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          width: MediaQuery.of(context).size.width * 0.2333333,
-                          color: Colors.transparent,
-                          child: Row(
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 2.0),
-                                child: Text(
-                                  'Open',
-                                  style: TextStyle(
-                                      color: Color(0xFF000000),
-                                      fontFamily: 'PublicSans',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 14),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 30),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.33333,
+                        color: Colors.transparent,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            width:
+                                MediaQuery.of(context).size.width * 0.3333333,
+                            color: Colors.transparent,
+                            child: Row(
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 2.0),
+                                  child: Text(
+                                    'Open',
+                                    style: TextStyle(
+                                        color: Color(0xFF000000),
+                                        fontFamily: 'PublicSans',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 14),
+                                  ),
                                 ),
-                              ),
-                              Transform.scale(
-                                scale: 0.5,
-                                child: CupertinoSwitch(
-                                  onChanged: (value) {
-                                    setState(() {
-                                      istoggled = !istoggled;
-                                    });
-                                  },
-                                  value: istoggled,
+                                Transform.scale(
+                                  scale: 0.5,
+                                  child: CupertinoSwitch(
+                                    onChanged: (value) {
+                                      setState(() {
+                                        isdata = "!";
+                                        istoggled = !istoggled;
+                                      });
+                                    },
+                                    value: istoggled,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

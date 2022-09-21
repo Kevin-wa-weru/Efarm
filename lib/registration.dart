@@ -1,11 +1,19 @@
-import 'package:eshamba/login.dart';
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:eshamba/homepage.dart';
+import 'package:eshamba/screens/driver/introduction.dart';
+import 'package:eshamba/vendor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class Registration extends StatefulWidget {
-  const Registration({Key? key}) : super(key: key);
+import 'package:eshamba/login.dart';
 
+class Registration extends StatefulWidget {
+  Registration({
+    Key? key,
+    this.usertype,
+  }) : super(key: key);
+  String? usertype;
   @override
   State<Registration> createState() => _RegistrationState();
 }
@@ -415,25 +423,84 @@ class _RegistrationState extends State<Registration> {
                     ),
                     Transform.translate(
                       offset: const Offset(0.0, -60.0),
-                      child: Container(
-                        height: MediaQuery.of(context).size.height * 0.0615763,
-                        width: MediaQuery.of(context).size.width * 0.41066666,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                colors: [
-                                  Color(0xFF7CD956),
-                                  Color(0xFF3EA334),
-                                ])),
-                        child: const Center(
-                          child: Text(
-                            'Sign Up',
-                            style: TextStyle(
-                                color: Color(0xFFFFFFFF),
-                                fontFamily: 'PublicSans',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16),
+                      child: InkWell(
+                        onTap: () {
+                          print(widget.usertype);
+                          if (nameController.text.isEmpty ||
+                              emailController.text.isEmpty ||
+                              passwordOneController.text.isEmpty ||
+                              passwordTwoController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                "Complete Filling The Form",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                ),
+                              )),
+                            );
+                            // ignore: unrelated_type_equality_checks
+                          } else if (passwordOneController.text !=
+                              passwordTwoController.text) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                "Confirm Password is not same as  Password",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                ),
+                              )),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                "${nameController.text} is Succefully Registered",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                              )),
+                            );
+                            if (widget.usertype == "user") {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const HomePage()));
+                            } else if (widget.usertype == "Vendor") {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const Vendor()));
+                            } else if (widget.usertype == "driver") {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const DriverProfileadd()));
+                            }
+                          }
+                        },
+                        child: Container(
+                          height:
+                              MediaQuery.of(context).size.height * 0.0615763,
+                          width: MediaQuery.of(context).size.width * 0.41066666,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              gradient: const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  colors: [
+                                    Color(0xFF7CD956),
+                                    Color(0xFF3EA334),
+                                  ])),
+                          child: const Center(
+                            child: Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                  color: Color(0xFFFFFFFF),
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16),
+                            ),
                           ),
                         ),
                       ),

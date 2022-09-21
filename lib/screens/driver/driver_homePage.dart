@@ -373,7 +373,7 @@ class SingleDeliveryRequest extends StatelessWidget {
                             fontSize: 18),
                       ),
                       Container(
-                        width: MediaQuery.of(context).size.width * 0.40666666,
+                        width: MediaQuery.of(context).size.width * 0.30666666,
                         height: MediaQuery.of(context).size.height * 0.02987684,
                         color: Colors.transparent,
                         child: Align(

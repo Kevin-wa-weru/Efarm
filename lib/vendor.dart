@@ -19,8 +19,23 @@ class _VendorState extends State<Vendor> {
     return Scaffold(
       bottomNavigationBar: InkWell(
         onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const MapLocation()));
+          if (streetController.text.isEmpty ||
+              roomController.text.isEmpty ||
+              cityController.text.isEmpty ||
+              postalCodeController.text.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                "Complete Filling The Form",
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              )),
+            );
+          } else {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const MapLocation()));
+          }
         },
         child: Padding(
           padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20),
