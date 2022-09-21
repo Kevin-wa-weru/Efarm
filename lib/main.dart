@@ -1,9 +1,11 @@
-import 'package:eshamba/homepage.dart';
 import 'package:eshamba/onboarding.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MyApp());
+// id 'com.android.application'
+void main() async {
+  runApp(const MyApp());
+  await Firebase.initializeApp();
 }
 
 class MyApp extends StatelessWidget {
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      home: const Onboarding(),
     );
   }
 }

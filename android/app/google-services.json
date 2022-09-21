@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "702077194050",
+    "project_id": "eshamba-fa9fa",
+    "storage_bucket": "eshamba-fa9fa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:702077194050:android:1b563aeb27b027ad3a42db",
+        "android_client_info": {
+          "package_name": "com.example.eshamba"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "702077194050-g4ac64m630d5h7ge1hamg2ndt9dn12if.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwJmjaSkmIAhr3fK5tsoBGW6uheRcOTL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "702077194050-g4ac64m630d5h7ge1hamg2ndt9dn12if.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

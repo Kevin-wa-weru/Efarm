@@ -1,4 +1,6 @@
 import 'package:eshamba/registration.dart';
+import 'package:eshamba/screens/driver/introduction.dart';
+import 'package:eshamba/vendor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -85,36 +87,45 @@ class _IntroductionState extends State<Introduction> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.112,
                 ),
-                Container(
-                  height: MediaQuery.of(context).size.height * 0.172413793,
-                  width: MediaQuery.of(context).size.width * 0.3733333,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: const Color(0xFF39B54A),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.04926108,
-                        width: MediaQuery.of(context).size.width * 0.0925333,
-                        child: SvgPicture.asset('assets/icons/vendor.svg',
-                            fit: BoxFit.fitHeight),
-                      ),
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height *
-                            0.020935960591133,
-                      ),
-                      const Text(
-                        'Vendor',
-                        style: TextStyle(
-                            color: Color(0xFFFFFFFF),
-                            fontFamily: 'PublicSans',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16),
-                      ),
-                    ],
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const Vendor()));
+                  },
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.172413793,
+                    width: MediaQuery.of(context).size.width * 0.3733333,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF39B54A),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height:
+                              MediaQuery.of(context).size.height * 0.04926108,
+                          width: MediaQuery.of(context).size.width * 0.0925333,
+                          child: SvgPicture.asset('assets/icons/vendor.svg',
+                              fit: BoxFit.fitHeight),
+                        ),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height *
+                              0.020935960591133,
+                        ),
+                        const Text(
+                          'Vendor',
+                          style: TextStyle(
+                              color: Color(0xFFFFFFFF),
+                              fontFamily: 'PublicSans',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -127,7 +138,7 @@ class _IntroductionState extends State<Introduction> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const Registration()));
+                        builder: (context) => const DriverProfileadd()));
               },
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.0677339,

@@ -1,3 +1,4 @@
+import 'package:eshamba/checkout.dart';
 import 'package:eshamba/models/data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -47,10 +48,10 @@ class _CartState extends State<Cart> {
                 padding: const EdgeInsets.only(bottom: 20.0),
                 child: InkWell(
                   onTap: () {
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => const ResetPassword()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const CheckOut()));
                   },
                   child: Container(
                     height: MediaQuery.of(context).size.height * 0.0615763,

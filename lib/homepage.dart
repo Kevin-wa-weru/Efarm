@@ -1,5 +1,6 @@
 import 'package:eshamba/about_us.dart';
 import 'package:eshamba/blogs.dart';
+import 'package:eshamba/book_lorry_step1.dart';
 import 'package:eshamba/cart.dart';
 import 'package:eshamba/chat.dart';
 import 'package:eshamba/models/data.dart';
@@ -323,7 +324,60 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.26945812,
+                  height: MediaQuery.of(context).size.height * 0.01970443,
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const BookLorryStep1()));
+                  },
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.05541871,
+                    width: MediaQuery.of(context).size.width * 0.597333333333,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      color: const Color(0xFFF4F4F4),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          height:
+                              MediaQuery.of(context).size.height * 0.0657142,
+                          width: MediaQuery.of(context).size.width * 0.11733333,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            color: const Color(0xFF39B54A),
+                          ),
+                          child: Center(
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height *
+                                  0.020480295,
+                              width: MediaQuery.of(context).size.width *
+                                  0.0380266666,
+                              child: SvgPicture.asset('assets/icons/truck.svg',
+                                  color: Colors.white, fit: BoxFit.contain),
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 10.0),
+                          child: Text(
+                            'Book a driver',
+                            style: TextStyle(
+                                color: Color(0xFF39B54A),
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.20945812,
                 ),
                 Container(
                   height: MediaQuery.of(context).size.height * 0.05541871,
