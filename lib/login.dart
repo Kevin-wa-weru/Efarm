@@ -1,12 +1,17 @@
 import 'package:eshamba/forgot_password.dart';
+import 'package:eshamba/homepage.dart';
 import 'package:eshamba/registration.dart';
+import 'package:eshamba/screens/driver/introduction.dart';
+import 'package:eshamba/services/cruds.dart';
+import 'package:eshamba/vendor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
-
+  const Login({Key? key, this.usertype}) : super(key: key);
+  final String? usertype;
   @override
   State<Login> createState() => _LoginState();
 }
@@ -19,6 +24,7 @@ class _LoginState extends State<Login> {
   bool obsecurePasswordOne = true;
   bool obsecurePasswordTwo = true;
 
+  bool appIsloading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -283,7 +289,7 @@ class _LoginState extends State<Login> {
                       height: MediaQuery.of(context).size.height * 0.051724137,
                     ),
                     InkWell(
-                      onTap: () {
+                      onTap: () async {
                         if (emailController.text.isEmpty ||
                             passwordController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -296,39 +302,100 @@ class _LoginState extends State<Login> {
                             )),
                           );
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                              "Successfully Logged In ${emailController.text}",
-                              style: const TextStyle(
-                                color: Colors.white,
-                              ),
-                            )),
-                          );
+                          setState(() {
+                            appIsloading = true;
+                          });
+                          await AuthenticationHelper()
+                              .signIn(
+                            email: emailController.text,
+                            password: passwordController.text,
+                          )
+                              .then((result) async {
+                            setState(() {
+                              appIsloading = false;
+                            });
+
+                            if (result == null) {
+                              if (widget.usertype == 'user') {
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                prefs.setString('stringValue', "user");
+                                // ignore: use_build_context_synchronously
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const HomePage()));
+                              }
+
+                              if (widget.usertype == 'Vendor') {
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                prefs.setString('stringValue', "Vendor");
+                                // ignore: use_build_context_synchronously
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => const Vendor()));
+                              }
+
+                              if (widget.usertype == 'driver') {
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                prefs.setString('stringValue', "driver");
+                                // ignore: use_build_context_synchronously
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const DriverProfileadd()));
+                              }
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                  "$result",
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                  ),
+                                )),
+                              );
+                            }
+                          });
                         }
                       },
                       child: Container(
-                        height: MediaQuery.of(context).size.height * 0.0615763,
-                        width: MediaQuery.of(context).size.width * 0.41066666,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                colors: [
-                                  Color(0xFF7CD956),
-                                  Color(0xFF3EA334),
-                                ])),
-                        child: const Center(
-                          child: Text(
-                            'Log In',
-                            style: TextStyle(
-                                color: Color(0xFFFFFFFF),
-                                fontFamily: 'PublicSans',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16),
-                          ),
-                        ),
-                      ),
+                          height:
+                              MediaQuery.of(context).size.height * 0.0615763,
+                          width: MediaQuery.of(context).size.width * 0.41066666,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              gradient: const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  colors: [
+                                    Color(0xFF7CD956),
+                                    Color(0xFF3EA334),
+                                  ])),
+                          child: appIsloading == false
+                              ? const Center(
+                                  child: Text(
+                                    'Log In',
+                                    style: TextStyle(
+                                        color: Color(0xFFFFFFFF),
+                                        fontFamily: 'PublicSans',
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16),
+                                  ),
+                                )
+                              : const Center(
+                                  child: SizedBox(
+                                    height: 15,
+                                    width: 15,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
                     ),
                   ],
                 ),
@@ -348,8 +415,7 @@ class _LoginState extends State<Login> {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) =>
-                                         Registration()));
+                                    builder: (context) => Registration()));
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

@@ -1,6 +1,7 @@
+import 'package:eshamba/search_location.dart';
 import 'package:eshamba/workhours.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
+
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -26,6 +27,19 @@ class _MapLocationState extends State<MapLocation> {
   void mapCreated(controller) {
     setState(() {
       _controller = controller;
+    });
+  }
+
+  Future<void> navigateAndDisplaySelection(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SearchLocation()),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      startLocation = result;
     });
   }
 
@@ -128,43 +142,7 @@ class _MapLocationState extends State<MapLocation> {
                 padding: const EdgeInsets.only(left: 20.0),
                 child: InkWell(
                   onTap: () async {
-                    var place = await PlacesAutocomplete.show(
-                        context: context,
-                        apiKey: googleApikey,
-                        mode: Mode.overlay,
-                        types: [],
-                        strictbounds: false,
-                        components: [Component(Component.country, 'np')],
-                        //google_map_webservice package
-                        onError: (err) {
-                          print(err);
-                        });
-
-                    if (place != null) {
-                      setState(() {
-                        startLocation = place.description.toString();
-                      });
-
-                      //form google_maps_webservice package
-                      final plist = GoogleMapsPlaces(
-                        apiKey: googleApikey,
-                        apiHeaders: await const GoogleApiHeaders().getHeaders(),
-                        //from google_api_headers package
-                      );
-                      String placeid = place.placeId ?? "0";
-                      final detail = await plist.getDetailsByPlaceId(placeid);
-                      final geometry = detail.result.geometry!;
-                      final lat = geometry.location.lat;
-                      final lang = geometry.location.lng;
-                      var newlatlang = LatLng(lat, lang);
-                      setState(() {
-                        selectedLocation = newlatlang;
-                      });
-
-                      //move map camera to selected place with animation
-                      _controller.animateCamera(CameraUpdate.newCameraPosition(
-                          CameraPosition(target: newlatlang, zoom: 17)));
-                    }
+                    navigateAndDisplaySelection(context);
                   },
                   child: Container(
                     height: MediaQuery.of(context).size.height * 0.0591133,

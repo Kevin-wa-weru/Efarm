@@ -1,4 +1,4 @@
-import 'package:eshamba/about_us.dart';
+import 'package:eshamba/screens/shared/about_us.dart';
 import 'package:eshamba/book_lorry_step1.dart';
 import 'package:eshamba/detailed_farm_detail.dart';
 import 'package:eshamba/notifications.dart';
@@ -822,7 +822,9 @@ class _VendorprofileState extends State<Vendorprofile> {
                     const SingledFarm()
                   ]),
                   const Chat(),
-                  const Orders()
+                  const Orders(
+                    showbackArrow: false,
+                  )
                 ],
               ),
             )));
@@ -838,8 +840,8 @@ class SingledFarm extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const DetailedFarm()));
+        // Navigator.push(context,
+        //     MaterialPageRoute(builder: (context) => const DetailedFarm()));
       },
       child: Padding(
         padding:

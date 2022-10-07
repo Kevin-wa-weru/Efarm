@@ -3,13 +3,9 @@ import 'package:eshamba/screens/driver/driver_homePage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_api_headers/google_api_headers.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_webservice/places.dart';
+import 'package:location/location.dart' as locater;
 
 class DriverProfileadd extends StatefulWidget {
   const DriverProfileadd({super.key});
@@ -21,12 +17,15 @@ class DriverProfileadd extends StatefulWidget {
 class _DriverProfileaddState extends State<DriverProfileadd> {
   bool istoggled = false;
   final _streetnocontroller = TextEditingController();
-  final _contactController = TextEditingController();
 
   String googleApikey = "AIzaSyAmQ9UeFrn_LxD4SzDSYlCHcVIj0V2qbt0";
   String startLocation = "Search your location";
 
   LatLng selectedLocation = const LatLng(0, 0);
+
+  late locater.PermissionStatus _permissionGranted;
+  locater.LocationData? userLocation;
+  late bool _serviceEnabled;
 
   void mapCreated(controller) {
     setState(() {
@@ -45,6 +44,31 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
     if (timeOfDay != null && timeOfDay != TimeOfDay.now()) {
       return timeOfDay;
     }
+  }
+
+  Future<void> getUserLocation() async {
+    locater.Location location = locater.Location();
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == locater.PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != locater.PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    final locationData = await location.getLocation();
+    setState(() {
+      userLocation = locationData;
+    });
   }
 
   @override
@@ -139,9 +163,17 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
                           vertical:
                               MediaQuery.of(context).size.height * 0.0197339,
                         ),
-                        prefixIcon: const Padding(
-                          padding: EdgeInsets.only(
-                              top: 14, right: 14.0, bottom: 14.0, left: 0.5),
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.only(
+                              top: 14, right: 16.0, bottom: 14.0, left: 15),
+                          child: SizedBox(
+                            height:
+                                MediaQuery.of(context).size.height * 0.0233990,
+                            width:
+                                MediaQuery.of(context).size.width * 0.050666666,
+                            child: SvgPicture.asset('assets/icons/car.svg',
+                                fit: BoxFit.fitHeight),
+                          ),
                         ),
                         filled: true,
                         hintText: 'Type Of Vechile',
@@ -161,47 +193,7 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
                   child: InkWell(
-                    onTap: () async {
-                      var place = await PlacesAutocomplete.show(
-                          context: context,
-                          apiKey: googleApikey,
-                          mode: Mode.overlay,
-                          types: [],
-                          strictbounds: false,
-                          components: [Component(Component.country, 'np')],
-                          //google_map_webservice package
-                          onError: (err) {
-                            print(err);
-                          });
-
-                      if (place != null) {
-                        setState(() {
-                          startLocation = place.description.toString();
-                        });
-
-                        //form google_maps_webservice package
-                        final plist = GoogleMapsPlaces(
-                          apiKey: googleApikey,
-                          apiHeaders:
-                              await const GoogleApiHeaders().getHeaders(),
-                          //from google_api_headers package
-                        );
-                        String placeid = place.placeId ?? "0";
-                        final detail = await plist.getDetailsByPlaceId(placeid);
-                        final geometry = detail.result.geometry!;
-                        final lat = geometry.location.lat;
-                        final lang = geometry.location.lng;
-                        var newlatlang = LatLng(lat, lang);
-                        setState(() {
-                          selectedLocation = newlatlang;
-                        });
-
-                        //move map camera to selected place with animation
-                        _controller.animateCamera(
-                            CameraUpdate.newCameraPosition(
-                                CameraPosition(target: newlatlang, zoom: 17)));
-                      }
-                    },
+                    onTap: () async {},
                     child: Container(
                       height: MediaQuery.of(context).size.height * 0.0591133,
                       width: MediaQuery.of(context).size.width *

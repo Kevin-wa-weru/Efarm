@@ -1,9 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ChatDetails extends StatefulWidget {
-  const ChatDetails({Key? key}) : super(key: key);
+  const ChatDetails(
+      {Key? key,
+      required this.userID,
+      required this.name,
+      required this.avatarUrl})
+      : super(key: key);
+  final String userID;
+  final String name;
+  final String avatarUrl;
 
   @override
   State<ChatDetails> createState() => _ChatDetailsState();
@@ -11,6 +21,7 @@ class ChatDetails extends StatefulWidget {
 
 class _ChatDetailsState extends State<ChatDetails> {
   final chatController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,28 +50,30 @@ class _ChatDetailsState extends State<ChatDetails> {
                   padding: const EdgeInsets.only(left: 20.0),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius:
-                            MediaQuery.of(context).size.height * 0.023251231,
-                        backgroundImage:
-                            const AssetImage('assets/images/woman.jpg'),
+                      Hero(
+                        tag: widget.avatarUrl,
+                        child: CircleAvatar(
+                          radius:
+                              MediaQuery.of(context).size.height * 0.023251231,
+                          backgroundImage: NetworkImage(widget.avatarUrl),
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0),
                         child: Column(
-                          children: const [
+                          children: [
                             SizedBox(
                               width: 200,
                               child: Text(
-                                'oliviathomson573',
-                                style: TextStyle(
+                                widget.name,
+                                style: const TextStyle(
                                     color: Colors.black,
                                     fontFamily: 'PublicSans',
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14),
                               ),
                             ),
-                            Padding(
+                            const Padding(
                               padding: EdgeInsets.only(top: 2.0),
                               child: SizedBox(
                                 width: 200,
@@ -82,31 +95,61 @@ class _ChatDetailsState extends State<ChatDetails> {
                 ),
               ],
             ),
-            Expanded(
-                child: ListView(
-              children: [
-                Column(
-                  children: const [
-                    singleReceivedBubble(),
-                    singleLocalBubble(),
-                    singleLocalBubble(),
-                    singleReceivedBubble(),
-                    singleReceivedBubble(),
-                    singleLocalBubble(),
-                    singleLocalBubble(),
-                    singleReceivedBubble(),
-                    singleReceivedBubble(),
-                    singleLocalBubble(),
-                    singleLocalBubble(),
-                    singleReceivedBubble(),
-                    singleReceivedBubble(),
-                    singleLocalBubble(),
-                    singleLocalBubble(),
-                    singleReceivedBubble(),
-                  ],
-                ),
-              ],
-            )),
+            StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('chats')
+                    .doc(AuthenticationHelper().userid.trim())
+                    .collection('messages')
+                    .doc(widget.userID.trim())
+                    .collection('thread')
+                    .orderBy('time', descending: true)
+                    .snapshots(),
+                builder: (context, AsyncSnapshot snapshot) {
+                  if (snapshot.data == null) {
+                    return Expanded(
+                        child: ListView.builder(
+                      reverse: true,
+                      scrollDirection: Axis.vertical,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: 10,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Container();
+                      },
+                    ));
+                  } else {
+                    if (snapshot.data.docs.length < 1) {
+                      return const Center(
+                        child: Text('NO messages'),
+                      );
+                    } else {
+                      return Expanded(
+                          child: ListView.builder(
+                        reverse: true,
+                        scrollDirection: Axis.vertical,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: snapshot.data!.docs.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          if (snapshot.data!.docs[index]['userId'] ==
+                              AuthenticationHelper().userid.trim()) {
+                            return SingleLocalBubble(
+                                message: snapshot.data!.docs[index]['message'],
+                                time: DateTime.parse(snapshot
+                                    .data!.docs[index]['time']
+                                    .toDate()
+                                    .toString()));
+                          } else {
+                            return SingleReceivedBubble(
+                                message: snapshot.data!.docs[index]['message'],
+                                time: DateTime.parse(snapshot
+                                    .data!.docs[index]['time']
+                                    .toDate()
+                                    .toString()));
+                          }
+                        },
+                      ));
+                    }
+                  }
+                }),
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
@@ -167,7 +210,10 @@ class _ChatDetailsState extends State<ChatDetails> {
                                   fontFamily: 'PublicSans',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 14),
-                              keyboardType: TextInputType.emailAddress,
+                              keyboardType: TextInputType.name,
+                              enableSuggestions: true,
+                              textCapitalization: TextCapitalization.sentences,
+                              autocorrect: true,
                               decoration: InputDecoration(
                                 isDense: true,
                                 fillColor: Colors.transparent,
@@ -205,16 +251,58 @@ class _ChatDetailsState extends State<ChatDetails> {
                                                   .size
                                                   .width *
                                               0.05872),
-                                      child: SizedBox(
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                                0.029864,
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.061333333333,
-                                        child: SvgPicture.asset(
-                                            'assets/icons/send.svg',
-                                            fit: BoxFit.contain),
+                                      child: InkWell(
+                                        onTap: () async {
+                                          if (chatController.text.isEmpty) {
+                                          } else {
+                                            final CollectionReference chatRef =
+                                                FirebaseFirestore.instance
+                                                    .collection('chats')
+                                                    .doc(AuthenticationHelper()
+                                                        .userid
+                                                        .trim())
+                                                    .collection('messages')
+                                                    .doc(widget.userID.trim())
+                                                    .collection('thread');
+
+                                            final latestMessage =
+                                                FirebaseFirestore.instance
+                                                    .collection('chats')
+                                                    .doc(AuthenticationHelper()
+                                                        .userid
+                                                        .trim())
+                                                    .collection('messages')
+                                                    .doc(widget.userID.trim());
+
+                                            await chatRef.add({
+                                              'userId':
+                                                  AuthenticationHelper().userid,
+                                              'time': DateTime.now(),
+                                              'message': chatController.text,
+                                            });
+
+                                            await latestMessage.update({
+                                              'message': chatController.text,
+                                              'userId':
+                                                  AuthenticationHelper().userid,
+                                              'time': DateTime.now()
+                                            });
+                                            chatController.clear();
+                                          }
+                                        },
+                                        child: SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.029864,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.061333333333,
+                                          child: SvgPicture.asset(
+                                              'assets/icons/send.svg',
+                                              fit: BoxFit.contain),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -247,11 +335,14 @@ class _ChatDetailsState extends State<ChatDetails> {
   }
 }
 
-class singleReceivedBubble extends StatelessWidget {
-  const singleReceivedBubble({
+class SingleReceivedBubble extends StatelessWidget {
+  const SingleReceivedBubble({
     Key? key,
+    required this.message,
+    required this.time,
   }) : super(key: key);
-
+  final String message;
+  final DateTime time;
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -270,12 +361,12 @@ class singleReceivedBubble extends StatelessWidget {
                 ),
                 color: Color(0xFFF4F4F4),
               ),
-              child: const Padding(
-                padding:
-                    EdgeInsets.only(left: 15.0, right: 2, top: 10, bottom: 10),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    left: 15.0, right: 2, top: 10, bottom: 10),
                 child: Text(
-                  'What are you doing?',
-                  style: TextStyle(
+                  message,
+                  style: const TextStyle(
                       color: Color(0xFF000000),
                       fontFamily: 'PublicSans',
                       fontWeight: FontWeight.w400,
@@ -289,9 +380,9 @@ class singleReceivedBubble extends StatelessWidget {
               ),
               child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.58933333,
-                child: const Text(
-                  '8:36pm',
-                  style: TextStyle(
+                child: Text(
+                  '${time.hour}:${time.minute}${time.hour > 12 ? 'pm' : 'am'}',
+                  style: const TextStyle(
                       color: Color(0xFF000000),
                       fontFamily: 'PublicSans',
                       fontWeight: FontWeight.w400,
@@ -306,10 +397,14 @@ class singleReceivedBubble extends StatelessWidget {
   }
 }
 
-class singleLocalBubble extends StatelessWidget {
-  const singleLocalBubble({
+class SingleLocalBubble extends StatelessWidget {
+  const SingleLocalBubble({
     Key? key,
+    required this.message,
+    required this.time,
   }) : super(key: key);
+  final String message;
+  final DateTime time;
 
   @override
   Widget build(BuildContext context) {
@@ -329,12 +424,12 @@ class singleLocalBubble extends StatelessWidget {
                 ),
                 color: Color(0xFF39B54A),
               ),
-              child: const Padding(
-                padding:
-                    EdgeInsets.only(left: 15.0, right: 2, top: 10, bottom: 10),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    left: 15.0, right: 2, top: 10, bottom: 10),
                 child: Text(
-                  'I am filling out this job application',
-                  style: TextStyle(
+                  message,
+                  style: const TextStyle(
                       color: Colors.white,
                       fontFamily: 'PublicSans',
                       fontWeight: FontWeight.w400,
@@ -348,11 +443,11 @@ class singleLocalBubble extends StatelessWidget {
               ),
               child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.58933333,
-                child: const Align(
+                child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '8:36pm',
-                    style: TextStyle(
+                    '${time.hour}:${time.minute}${time.hour > 12 ? 'pm' : 'am'}',
+                    style: const TextStyle(
                         color: Color(0xFF000000),
                         fontFamily: 'PublicSans',
                         fontWeight: FontWeight.w400,

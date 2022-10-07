@@ -1,13 +1,13 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:eshamba/homepage.dart';
-import 'package:eshamba/screens/driver/introduction.dart';
-import 'package:eshamba/vendor.dart';
+import 'package:eshamba/email_verification.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:eshamba/login.dart';
 
+// ignore: must_be_immutable
 class Registration extends StatefulWidget {
   Registration({
     Key? key,
@@ -26,7 +26,7 @@ class _RegistrationState extends State<Registration> {
 
   bool obsecurePasswordOne = true;
   bool obsecurePasswordTwo = true;
-
+  bool appIsLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -424,8 +424,8 @@ class _RegistrationState extends State<Registration> {
                     Transform.translate(
                       offset: const Offset(0.0, -60.0),
                       child: InkWell(
-                        onTap: () {
-                          print(widget.usertype);
+                        onTap: () async {
+                          // print(widget.usertype);
                           if (nameController.text.isEmpty ||
                               emailController.text.isEmpty ||
                               passwordOneController.text.isEmpty ||
@@ -452,57 +452,147 @@ class _RegistrationState extends State<Registration> {
                               )),
                             );
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                "${nameController.text} is Succefully Registered",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                              )),
-                            );
                             if (widget.usertype == "user") {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const HomePage()));
+                              setState(() {
+                                appIsLoading = true;
+                              });
+                              await AuthenticationHelper()
+                                  .signUp(
+                                      email: emailController.text,
+                                      password: passwordTwoController.text,
+                                      name: nameController.text,
+                                      userType: widget.usertype)
+                                  .then((result) {
+                                setState(() {
+                                  appIsLoading = false;
+                                });
+                                if (result == null) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const EmailVerification(
+                                                userType: 'user',
+                                              )));
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                      "$result",
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                      ),
+                                    )),
+                                  );
+                                }
+                              });
                             } else if (widget.usertype == "Vendor") {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const Vendor()));
+                              setState(() {
+                                appIsLoading = true;
+                              });
+                              await AuthenticationHelper()
+                                  .signUp(
+                                      email: emailController.text,
+                                      password: passwordTwoController.text,
+                                      name: nameController.text,
+                                      userType: widget.usertype)
+                                  .then((result) {
+                                if (result == null) {
+                                  setState(() {
+                                    appIsLoading = false;
+                                  });
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const EmailVerification(
+                                                userType: 'Vendor',
+                                              )));
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                      "$result",
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                      ),
+                                    )),
+                                  );
+                                }
+                              });
                             } else if (widget.usertype == "driver") {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const DriverProfileadd()));
+                              setState(() {
+                                appIsLoading = true;
+                              });
+                              await AuthenticationHelper()
+                                  .signUp(
+                                      email: emailController.text,
+                                      password: passwordTwoController.text,
+                                      name: nameController.text,
+                                      userType: widget.usertype)
+                                  .then((result) {
+                                if (result == null) {
+                                  setState(() {
+                                    appIsLoading = false;
+                                  });
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const EmailVerification(
+                                                userType: 'driver',
+                                              )));
+                                } else {
+                                  setState(() {
+                                    appIsLoading = false;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                      "$result",
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                      ),
+                                    )),
+                                  );
+                                }
+                              });
                             }
                           }
                         },
                         child: Container(
-                          height:
-                              MediaQuery.of(context).size.height * 0.0615763,
-                          width: MediaQuery.of(context).size.width * 0.41066666,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              gradient: const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  colors: [
-                                    Color(0xFF7CD956),
-                                    Color(0xFF3EA334),
-                                  ])),
-                          child: const Center(
-                            child: Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                  color: Color(0xFFFFFFFF),
-                                  fontFamily: 'PublicSans',
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16),
-                            ),
-                          ),
-                        ),
+                            height:
+                                MediaQuery.of(context).size.height * 0.0615763,
+                            width:
+                                MediaQuery.of(context).size.width * 0.41066666,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                gradient: const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    colors: [
+                                      Color(0xFF7CD956),
+                                      Color(0xFF3EA334),
+                                    ])),
+                            child: appIsLoading == false
+                                ? const Center(
+                                    child: Text(
+                                      'Sign Up',
+                                      style: TextStyle(
+                                          color: Color(0xFFFFFFFF),
+                                          fontFamily: 'PublicSans',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16),
+                                    ),
+                                  )
+                                : const Center(
+                                    child: SizedBox(
+                                      height: 15,
+                                      width: 15,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
                       ),
                     ),
                   ],
@@ -520,7 +610,9 @@ class _RegistrationState extends State<Registration> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const Login()));
+                                  builder: (context) => Login(
+                                        usertype: widget.usertype,
+                                      )));
                         },
                         child: Container(
                           color: Colors.transparent,

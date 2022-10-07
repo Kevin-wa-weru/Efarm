@@ -1,11 +1,13 @@
 import 'package:eshamba/book_lorry_step2.dart';
+import 'package:eshamba/screens/saved_locations.dart';
+import 'package:eshamba/set_start_Location_on_map.dart';
+import 'package:eshamba/search_location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
+import 'package:google_geocoding/google_geocoding.dart';
+import 'package:location/location.dart' as locater;
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_webservice/places.dart';
 
 class BookLorryStep1 extends StatefulWidget {
   const BookLorryStep1({Key? key}) : super(key: key);
@@ -20,26 +22,141 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
   String endLocation = "Where to";
   LatLng? startingPoint;
   LatLng? endPoint;
+  late locater.PermissionStatus _permissionGranted;
+  locater.LocationData? userLocation;
+  late bool _serviceEnabled;
+
+  Future<void> navigateAndDisplaySelection(
+      BuildContext context, String where) async {
+    final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SearchLocation(),
+        ));
+
+    if (!mounted) return;
+
+    if (where == 'start') {
+      if (result == 'mylocation') {
+        await getAddressFromLocation('start');
+      } else {
+        setState(() {
+          startLocation = result;
+        });
+        getLocationFromAdress(result, 'start');
+      }
+    } else {
+      if (result == 'mylocation') {
+        await getAddressFromLocation('end');
+      } else {
+        setState(() {
+          endLocation = result;
+        });
+
+        getLocationFromAdress(result, 'end');
+      }
+    }
+  }
+
+  Future getLocationFromAdress(address, String where) async {
+    var googleGeocoding =
+        GoogleGeocoding("AIzaSyAmQ9UeFrn_LxD4SzDSYlCHcVIj0V2qbt0");
+    var result = await googleGeocoding.geocoding.get(address, []);
+
+    if (where == 'start') {
+      startingPoint = LatLng(
+          (result!.results!.first.geometry!.location!.lat)!.toDouble(),
+          (result.results!.first.geometry!.location!.lng)!.toDouble());
+    } else {
+      endPoint = LatLng(
+          (result!.results!.first.geometry!.location!.lat)!.toDouble(),
+          (result.results!.first.geometry!.location!.lng)!.toDouble());
+    }
+  }
+
+  Future getAddressFromLocation(String where) async {
+    var googleGeocoding =
+        GoogleGeocoding("AIzaSyAmQ9UeFrn_LxD4SzDSYlCHcVIj0V2qbt0");
+    var addresses = await googleGeocoding.geocoding.getReverse(LatLon(
+      userLocation!.latitude!.toDouble(),
+      userLocation!.longitude!.toDouble(),
+    ));
+    if (where == 'start') {
+      setState(() {
+        startLocation = addresses!
+            .results!.first.addressComponents!.first.longName
+            .toString();
+      });
+    } else {
+      setState(() {
+        endLocation = addresses!
+            .results!.first.addressComponents!.first.longName
+            .toString();
+      });
+    }
+  }
+
+  Future<void> getUserLocation() async {
+    locater.Location location = locater.Location();
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == locater.PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != locater.PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    final locationData = await location.getLocation();
+    setState(() {
+      userLocation = locationData;
+    });
+  }
+
+  @override
+  void initState() {
+    getUserLocation();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: Container(
-        height: MediaQuery.of(context).size.height * 0.08374384,
-        width: MediaQuery.of(context).size.width * 0.1813333333,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(1000),
-            color: Colors.transparent,
-            border: Border.all(
-              color: const Color(0xFFBBBBBB),
-              width: 1,
-            )),
-        child: Center(
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.0472413793,
-            width: MediaQuery.of(context).size.width * 0.04866666,
-            child: SvgPicture.asset('assets/icons/map.svg',
-                color: Colors.black, fit: BoxFit.contain),
+      floatingActionButton: InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => SetStartLocationOnMap(
+                        longitude: userLocation!.longitude!.toDouble(),
+                        latitude: userLocation!.latitude!.toDouble(),
+                      )));
+        },
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.08374384,
+          width: MediaQuery.of(context).size.width * 0.1813333333,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(1000),
+              color: Colors.transparent,
+              border: Border.all(
+                color: const Color(0xFFBBBBBB),
+                width: 1,
+              )),
+          child: Center(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.0472413793,
+              width: MediaQuery.of(context).size.width * 0.04866666,
+              child: SvgPicture.asset('assets/icons/map.svg',
+                  color: Colors.black, fit: BoxFit.contain),
+            ),
           ),
         ),
       ),
@@ -121,47 +238,7 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
                             padding: const EdgeInsets.only(left: 25.0, top: 10),
                             child: InkWell(
                               onTap: () async {
-                                var place = await PlacesAutocomplete.show(
-                                    context: context,
-                                    apiKey: googleApikey,
-                                    mode: Mode.overlay,
-                                    types: [],
-                                    strictbounds: false,
-                                    components: [
-                                      Component(Component.country, 'np')
-                                    ],
-                                    //google_map_webservice package
-                                    onError: (err) {
-                                      print(err);
-                                    });
-
-                                if (place != null) {
-                                  setState(() {
-                                    startLocation =
-                                        place.description.toString();
-                                  });
-
-                                  //form google_maps_webservice package
-                                  final plist = GoogleMapsPlaces(
-                                    apiKey: googleApikey,
-                                    apiHeaders: await const GoogleApiHeaders()
-                                        .getHeaders(),
-                                    //from google_api_headers package
-                                  );
-                                  String placeid = place.placeId ?? "0";
-                                  final detail =
-                                      await plist.getDetailsByPlaceId(placeid);
-                                  final geometry = detail.result.geometry!;
-                                  final lat = geometry.location.lat;
-                                  final lang = geometry.location.lng;
-                                  var newlatlang = LatLng(lat, lang);
-                                  setState(() {
-                                    startingPoint = newlatlang;
-                                  });
-
-                                  //move map camera to selected place with animation
-                                  // mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: newlatlang, zoom: 17)));
-                                }
+                                navigateAndDisplaySelection(context, 'start');
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -207,46 +284,7 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
                             padding: const EdgeInsets.only(left: 25.0, top: 10),
                             child: InkWell(
                               onTap: () async {
-                                var place = await PlacesAutocomplete.show(
-                                    context: context,
-                                    apiKey: googleApikey,
-                                    mode: Mode.overlay,
-                                    types: [],
-                                    strictbounds: false,
-                                    components: [
-                                      Component(Component.country, 'np')
-                                    ],
-                                    //google_map_webservice package
-                                    onError: (err) {
-                                      print(err);
-                                    });
-
-                                if (place != null) {
-                                  setState(() {
-                                    endLocation = place.description.toString();
-                                  });
-
-                                  //form google_maps_webservice package
-                                  final plist = GoogleMapsPlaces(
-                                    apiKey: googleApikey,
-                                    apiHeaders: await const GoogleApiHeaders()
-                                        .getHeaders(),
-                                    //from google_api_headers package
-                                  );
-                                  String placeid = place.placeId ?? "0";
-                                  final detail =
-                                      await plist.getDetailsByPlaceId(placeid);
-                                  final geometry = detail.result.geometry!;
-                                  final lat = geometry.location.lat;
-                                  final lang = geometry.location.lng;
-                                  var newlatlang = LatLng(lat, lang);
-                                  setState(() {
-                                    endPoint = newlatlang;
-                                  });
-
-                                  //move map camera to selected place with animation
-                                  // mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: newlatlang, zoom: 17)));
-                                }
+                                navigateAndDisplaySelection(context, 'end');
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -305,42 +343,50 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 10.0, left: 20),
-              child: Row(
-                children: [
-                  Container(
-                    height: MediaQuery.of(context).size.height * 0.052566502,
-                    width: MediaQuery.of(context).size.width * 0.09866666,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(100.0),
-                        topRight: Radius.circular(100.0),
-                        bottomLeft: Radius.circular(100.0),
-                        topLeft: Radius.circular(100.0),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SavedLocation()));
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.052566502,
+                      width: MediaQuery.of(context).size.width * 0.09866666,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(100.0),
+                          topRight: Radius.circular(100.0),
+                          bottomLeft: Radius.circular(100.0),
+                          topLeft: Radius.circular(100.0),
+                        ),
+                        color: Color(0xFFD9D9D9),
                       ),
-                      color: Color(0xFFD9D9D9),
-                    ),
-                    child: Center(
-                      child: SizedBox(
-                        height:
-                            MediaQuery.of(context).size.height * 0.0472413793,
-                        width: MediaQuery.of(context).size.width * 0.04866666,
-                        child: SvgPicture.asset('assets/icons/star.svg',
-                            color: Colors.white, fit: BoxFit.contain),
+                      child: Center(
+                        child: SizedBox(
+                          height:
+                              MediaQuery.of(context).size.height * 0.0472413793,
+                          width: MediaQuery.of(context).size.width * 0.04866666,
+                          child: SvgPicture.asset('assets/icons/star.svg',
+                              color: Colors.white, fit: BoxFit.contain),
+                        ),
                       ),
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 10.0),
-                    child: Text(
-                      'Saved Places',
-                      style: TextStyle(
-                          color: Color(0xFF000000),
-                          fontFamily: 'PublicSans',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 10.0),
+                      child: Text(
+                        'Saved Places',
+                        style: TextStyle(
+                            color: Color(0xFF000000),
+                            fontFamily: 'PublicSans',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(
@@ -348,42 +394,53 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 10.0, left: 20),
-              child: Row(
-                children: [
-                  Container(
-                    height: MediaQuery.of(context).size.height * 0.052566502,
-                    width: MediaQuery.of(context).size.width * 0.09866666,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(100.0),
-                        topRight: Radius.circular(100.0),
-                        bottomLeft: Radius.circular(100.0),
-                        topLeft: Radius.circular(100.0),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SetStartLocationOnMap(
+                                longitude: userLocation!.longitude!.toDouble(),
+                                latitude: userLocation!.latitude!.toDouble(),
+                              )));
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.052566502,
+                      width: MediaQuery.of(context).size.width * 0.09866666,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(100.0),
+                          topRight: Radius.circular(100.0),
+                          bottomLeft: Radius.circular(100.0),
+                          topLeft: Radius.circular(100.0),
+                        ),
+                        color: Color(0xFFD9D9D9),
                       ),
-                      color: Color(0xFFD9D9D9),
-                    ),
-                    child: Center(
-                      child: SizedBox(
-                        height:
-                            MediaQuery.of(context).size.height * 0.0472413793,
-                        width: MediaQuery.of(context).size.width * 0.04866666,
-                        child: SvgPicture.asset('assets/icons/location.svg',
-                            color: Colors.white, fit: BoxFit.contain),
+                      child: Center(
+                        child: SizedBox(
+                          height:
+                              MediaQuery.of(context).size.height * 0.0472413793,
+                          width: MediaQuery.of(context).size.width * 0.04866666,
+                          child: SvgPicture.asset('assets/icons/location.svg',
+                              color: Colors.white, fit: BoxFit.contain),
+                        ),
                       ),
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 10.0),
-                    child: Text(
-                      'Set location on map',
-                      style: TextStyle(
-                          color: Color(0xFF000000),
-                          fontFamily: 'PublicSans',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 10.0),
+                      child: Text(
+                        'Set location on map',
+                        style: TextStyle(
+                            color: Color(0xFF000000),
+                            fontFamily: 'PublicSans',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(

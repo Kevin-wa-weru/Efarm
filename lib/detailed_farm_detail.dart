@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class DetailedFarm extends StatefulWidget {
-  const DetailedFarm({Key? key}) : super(key: key);
-
+  const DetailedFarm({Key? key, required this.farm}) : super(key: key);
+  final Map<String, dynamic> farm;
   @override
   State<DetailedFarm> createState() => _DetailedFarmState();
 }
@@ -49,15 +49,15 @@ class _DetailedFarmState extends State<DetailedFarm> {
                   right: 16, left: 16, bottom: 16, top: 16),
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(7.0),
-                  topRight: Radius.circular(7.0),
-                  bottomLeft: Radius.circular(7.0),
-                  bottomRight: Radius.circular(7.0),
+                  topLeft: Radius.circular(10.0),
+                  topRight: Radius.circular(10.0),
+                  bottomLeft: Radius.circular(10.0),
+                  bottomRight: Radius.circular(10.0),
                 ),
                 child: Card(
                   elevation: 2,
                   child: Container(
-                    height: MediaQuery.of(context).size.height * 0.4178325,
+                    // height: MediaQuery.of(context).size.height * 0.4178325,
                     width: MediaQuery.of(context).size.width * 0.89333333,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(7),
@@ -72,11 +72,12 @@ class _DetailedFarmState extends State<DetailedFarm> {
                           child: FittedBox(
                             fit: BoxFit.fill,
                             child: ClipRRect(
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(40.0),
-                                  topRight: Radius.circular(40.0),
-                                ),
-                                child: Image.asset('assets/images/veges.jpg')),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(10.0),
+                                topRight: Radius.circular(10.0),
+                              ),
+                              child: Image.network(widget.farm['link']),
+                            ),
                           ),
                         ),
                         Padding(
@@ -84,9 +85,9 @@ class _DetailedFarmState extends State<DetailedFarm> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Farm Name',
-                                style: TextStyle(
+                              Text(
+                                widget.farm['name'],
+                                style: const TextStyle(
                                     color: Color(0xFF000000),
                                     fontFamily: 'PublicSans',
                                     fontWeight: FontWeight.w600,
@@ -159,11 +160,11 @@ class _DetailedFarmState extends State<DetailedFarm> {
                                     'assets/icons/location.svg',
                                     fit: BoxFit.contain),
                               ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 8.0),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
                                 child: Text(
-                                  'Juja, Kikuyu',
-                                  style: TextStyle(
+                                  widget.farm['location'],
+                                  style: const TextStyle(
                                       color: Color(0xFF000000),
                                       fontFamily: 'PublicSans',
                                       fontWeight: FontWeight.w400,
@@ -186,11 +187,11 @@ class _DetailedFarmState extends State<DetailedFarm> {
                                     'assets/icons/clock.svg',
                                     fit: BoxFit.contain),
                               ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 8.0),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
                                 child: Text(
-                                  'Available: 11:00 am to 1:30pm',
-                                  style: TextStyle(
+                                  'Available: ${widget.farm['time']}',
+                                  style: const TextStyle(
                                       color: Color(0xFF000000),
                                       fontFamily: 'PublicSans',
                                       fontWeight: FontWeight.w400,
@@ -203,16 +204,21 @@ class _DetailedFarmState extends State<DetailedFarm> {
                         Padding(
                           padding: const EdgeInsets.only(top: 10.0, left: 10.0),
                           child: Row(
-                            children: const [
+                            children: [
                               Padding(
-                                padding: EdgeInsets.only(left: 4.0),
-                                child: Text(
-                                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-                                  style: TextStyle(
-                                      color: Color(0xFF707070),
-                                      fontFamily: 'PublicSans',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 10),
+                                padding: const EdgeInsets.only(
+                                    left: 4.0, bottom: 15),
+                                child: SizedBox(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.79333333,
+                                  child: Text(
+                                    widget.farm['description'],
+                                    style: const TextStyle(
+                                        color: Color(0xFF707070),
+                                        fontFamily: 'PublicSans',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 10),
+                                  ),
                                 ),
                               ),
                             ],

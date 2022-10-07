@@ -1,9 +1,12 @@
+// ignore_for_file: unnecessary_const
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 class DetailedBlog extends StatefulWidget {
-  const DetailedBlog({Key? key}) : super(key: key);
-
+  const DetailedBlog({Key? key, required this.blog}) : super(key: key);
+  final Map<String, dynamic> blog;
   @override
   State<DetailedBlog> createState() => _DetailedBlogState();
 }
@@ -62,12 +65,12 @@ class _DetailedBlogState extends State<DetailedBlog> {
                     Padding(
                       padding: const EdgeInsets.only(left: 10.0),
                       child: Column(
-                        children: const [
+                        children: [
                           SizedBox(
                             width: 300,
                             child: Text(
-                              'Elizabeth Reck',
-                              style: TextStyle(
+                              widget.blog['postedBy'],
+                              style: const TextStyle(
                                   color: Color(0xFF000000),
                                   fontFamily: 'PublicSans',
                                   fontWeight: FontWeight.w400,
@@ -75,13 +78,15 @@ class _DetailedBlogState extends State<DetailedBlog> {
                             ),
                           ),
                           Padding(
-                            padding: EdgeInsets.only(top: 4.0),
+                            padding: const EdgeInsets.only(top: 4.0),
                             child: SizedBox(
                               width: 300,
                               child: Text(
-                                '23 March 2022, 11:00pm',
-                                style: TextStyle(
-                                    color: Color(0xFF9F9F9F),
+                                widget.blog['date'],
+                                // '23 March 2022, 11:00pm',
+
+                                style: const TextStyle(
+                                    color: const Color(0xFF9F9F9F),
                                     fontFamily: 'PublicSans',
                                     fontWeight: FontWeight.w300,
                                     fontSize: 12),
@@ -99,14 +104,17 @@ class _DetailedBlogState extends State<DetailedBlog> {
                 Padding(
                   padding: const EdgeInsets.only(left: 20.0),
                   child: Row(
-                    children: const [
-                      Text(
-                        'Learn to Wheat',
-                        style: TextStyle(
-                            color: Color(0xFF000000),
-                            fontFamily: 'PublicSans',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14),
+                    children: [
+                      Hero(
+                        tag: widget.blog['title'],
+                        child: Text(
+                          widget.blog['title'],
+                          style: const TextStyle(
+                              color: Color(0xFF000000),
+                              fontFamily: 'PublicSans',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14),
+                        ),
                       ),
                     ],
                   ),
@@ -126,7 +134,9 @@ class _DetailedBlogState extends State<DetailedBlog> {
                           bottomLeft: Radius.circular(40.0),
                           bottomRight: Radius.circular(40.0),
                         ),
-                        child: Image.asset('assets/images/veges.jpg')),
+                        child: Hero(
+                            tag: widget.blog['image'],
+                            child: Image.network(widget.blog['image']))),
                   ),
                 ),
                 SizedBox(
@@ -141,9 +151,9 @@ class _DetailedBlogState extends State<DetailedBlog> {
                       SizedBox(
                           width: MediaQuery.of(context).size.width *
                               0.8933333333333333,
-                          child: const Text(
-                            'The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using Content here, content here, making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for lorem ipsum will uncover many web sites still in their infancy. Various versions have evolved over the years web page editors now use Lorem Ipsum as their default model text, and a search for lorem ipsum will uncover many web site',
-                            style: TextStyle(
+                          child: Text(
+                            widget.blog['description'],
+                            style: const TextStyle(
                                 color: Color(0xFF000000),
                                 fontFamily: 'PublicSans',
                                 fontWeight: FontWeight.w500,

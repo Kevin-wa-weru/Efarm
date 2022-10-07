@@ -1,4 +1,5 @@
-import 'package:eshamba/models/data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -17,44 +18,70 @@ class _NotificationsState extends State<Notifications> {
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark
             .copyWith(statusBarColor: Colors.transparent),
-        child: ListView(
+        child: Column(
           children: [
-            Column(
+            SizedBox(
+              height: MediaQuery.of(context).size.width * 0.128,
+            ),
+            Row(
               children: [
-                Row(
-                  children: [
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.053333333,
-                    ),
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.arrow_back_ios,
-                        size: 20,
-                      ),
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.168,
-                    ),
-                    const Text(
-                      'Notifications',
-                      style: TextStyle(
-                          color: Color(0xFF000000),
-                          fontFamily: 'PublicSans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18),
-                    ),
-                  ],
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.053333333,
+                ),
+                InkWell(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(
+                    Icons.arrow_back_ios,
+                    size: 20,
+                  ),
                 ),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.073251,
+                  width: MediaQuery.of(context).size.width * 0.268,
                 ),
-                Column(
-                  children:
-                      cateogry.map((e) => const SingleNotification()).toList(),
-                )
+                const Text(
+                  'Notifications',
+                  style: TextStyle(
+                      color: Color(0xFF000000),
+                      fontFamily: 'PublicSans',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18),
+                ),
               ],
             ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.003251,
+            ),
+            Expanded(
+              child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(AuthenticationHelper().userid.trim())
+                      .collection('notifications')
+                      .snapshots(),
+                  builder: (context, AsyncSnapshot snapshot) {
+                    if (snapshot.hasData) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: ListView.builder(
+                          scrollDirection: Axis.vertical,
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return SingleNotification(
+                              body: snapshot.data.docs[index]['body'],
+                              date: DateTime.parse(snapshot
+                                  .data.docs[index]['date']
+                                  .toDate()
+                                  .toString()),
+                              title: snapshot.data.docs[index]['title'],
+                            );
+                          },
+                        ),
+                      );
+                    } else {
+                      return Container();
+                    }
+                  }),
+            )
           ],
         ),
       ),
@@ -62,11 +89,22 @@ class _NotificationsState extends State<Notifications> {
   }
 }
 
-class SingleNotification extends StatelessWidget {
+class SingleNotification extends StatefulWidget {
   const SingleNotification({
     Key? key,
+    required this.title,
+    required this.body,
+    required this.date,
   }) : super(key: key);
+  final String title;
+  final String body;
+  final DateTime date;
 
+  @override
+  State<SingleNotification> createState() => _SingleNotificationState();
+}
+
+class _SingleNotificationState extends State<SingleNotification> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -80,34 +118,38 @@ class SingleNotification extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Transform.translate(
-              offset: const Offset(0.0, -10.0),
-              child: Row(
-                children: [
-                  Container(
-                    height: 20,
-                    width: 20,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(70),
-                        color: const Color(0xFF39B54A),
-                        border: Border.all(
-                          color: const Color(0xFF202020),
-                          width: 2,
-                        )),
+            (DateTime.now().difference(widget.date).inDays >= 1)
+                ? Container(
+                    height: 10,
                   )
-                ],
-              ),
-            ),
+                : Transform.translate(
+                    offset: const Offset(0.0, -10.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          height: 20,
+                          width: 20,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(70),
+                              color: const Color(0xFF39B54A),
+                              border: Border.all(
+                                color: const Color(0xFF202020),
+                                width: 2,
+                              )),
+                        )
+                      ],
+                    ),
+                  ),
             Transform.translate(
               offset: const Offset(0.0, -5.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 12.0, top: 0),
+                    padding: const EdgeInsets.only(left: 12.0, top: 0),
                     child: Text(
-                      'New video was uploaded',
-                      style: TextStyle(
+                      widget.title,
+                      style: const TextStyle(
                           color: Color(0xFF000000),
                           fontFamily: 'PublicSans',
                           fontWeight: FontWeight.w500,
@@ -115,10 +157,10 @@ class SingleNotification extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.only(right: 12.0, top: 10),
+                    padding: const EdgeInsets.only(right: 12.0, top: 10),
                     child: Text(
-                      '12:00 am',
-                      style: TextStyle(
+                      '${widget.date.hour}:${widget.date.minute} ${widget.date.hour > 12 ? 'am' : 'pm'}',
+                      style: const TextStyle(
                           color: Color(0xFF000000),
                           fontFamily: 'PublicSans',
                           fontWeight: FontWeight.w500,
@@ -134,9 +176,9 @@ class SingleNotification extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 12.0, top: 4),
                   child: SizedBox(
                     width: MediaQuery.of(context).size.width * 0.6933333,
-                    child: const Text(
-                      'Lorem ipsum dolor sit amet, consectetur dipiscing elit. Ornare sapien, et elit, ornare amet... See more ',
-                      style: TextStyle(
+                    child: Text(
+                      widget.body,
+                      style: const TextStyle(
                           color: Color(0xFF545454),
                           fontFamily: 'PublicSans',
                           fontWeight: FontWeight.w400,

@@ -1,5 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eshamba/checkout.dart';
-import 'package:eshamba/models/data.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -35,13 +36,30 @@ class _CartState extends State<Cart> {
               height: MediaQuery.of(context).size.height * 0.03300492,
             ),
             Expanded(
-                child: ListView(
-              children: [
-                Column(
-                  children: cateogry.map((e) => const CartItem()).toList(),
-                )
-              ],
-            )),
+                child: StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(AuthenticationHelper().userid.trim())
+                        .collection('cart')
+                        .snapshots(),
+                    builder: (context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData) {
+                        return ListView.builder(
+                          scrollDirection: Axis.vertical,
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return CartItem(
+                              name: snapshot.data!.docs[index]['name'],
+                              price: snapshot.data!.docs[index]['subtotal'],
+                              qty: snapshot.data!.docs[index]['qty'],
+                              image: snapshot.data!.docs[index]['imageUrl'],
+                            );
+                          },
+                        );
+                      } else {
+                        return Container();
+                      }
+                    })),
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
@@ -64,15 +82,37 @@ class _CartState extends State<Cart> {
                               Color(0xFF7CD956),
                               Color(0xFF3EA334),
                             ])),
-                    child: const Center(
-                      child: Text(
-                        'Continue : Total \$8.90',
-                        style: TextStyle(
-                            color: Color(0xFFFFFFFF),
-                            fontFamily: 'PublicSans',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16),
-                      ),
+                    child: Center(
+                      child: StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(AuthenticationHelper().userid.trim())
+                              .collection('cart')
+                              .snapshots(),
+                          builder: (context, AsyncSnapshot snapshot) {
+                            late String total = '';
+                            List allsubTotals = [];
+                            if (snapshot.hasData) {
+                              for (var doc in snapshot.data.docs) {
+                                allsubTotals.add(double.parse(doc['subtotal']));
+                              }
+
+                              total = allsubTotals
+                                  .reduce((value, current) => value + current)
+                                  .toStringAsFixed(2);
+
+                              return Text(
+                                'Continue : Total \$$total',
+                                style: const TextStyle(
+                                    color: Color(0xFFFFFFFF),
+                                    fontFamily: 'PublicSans',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16),
+                              );
+                            } else {
+                              return Container();
+                            }
+                          }),
                     ),
                   ),
                 ),
@@ -85,10 +125,25 @@ class _CartState extends State<Cart> {
   }
 }
 
-class CartItem extends StatelessWidget {
+class CartItem extends StatefulWidget {
   const CartItem({
     Key? key,
+    required this.name,
+    required this.price,
+    required this.qty,
+    required this.image,
   }) : super(key: key);
+  final String name;
+  final String price;
+  final String qty;
+  final String image;
+
+  @override
+  State<CartItem> createState() => _CartItemState();
+}
+
+class _CartItemState extends State<CartItem> {
+  List<String> selectedItem = [];
 
   @override
   Widget build(BuildContext context) {
@@ -96,11 +151,33 @@ class CartItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(
         children: [
-          Radio(
-              activeColor: const Color(0xFF3EA334),
-              value: "accepts",
-              groupValue: "group value",
-              onChanged: (value) {}),
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0, right: 10),
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  if (selectedItem.contains(widget.image)) {
+                    selectedItem.remove(widget.image);
+                  } else {
+                    selectedItem.add(widget.image);
+                  }
+                });
+              },
+              child: Container(
+                height: 20,
+                width: 20,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    color: selectedItem.contains(widget.image)
+                        ? const Color(0xFF3EA334)
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: Colors.black87,
+                      width: selectedItem.contains(widget.image) ? 0.5 : 2,
+                    )),
+              ),
+            ),
+          ),
           Container(
             height: MediaQuery.of(context).size.height * 0.152709,
             width: MediaQuery.of(context).size.width * 0.8533333,
@@ -127,7 +204,7 @@ class CartItem extends StatelessWidget {
                             bottomLeft: Radius.circular(80.0),
                             bottomRight: Radius.circular(80.0),
                           ),
-                          child: Image.asset('assets/images/veges.jpg')),
+                          child: Image.network(widget.image)),
                     ),
                   ),
                 ),
@@ -136,11 +213,11 @@ class CartItem extends StatelessWidget {
                   child: Column(
                     children: [
                       Container(
-                        width: MediaQuery.of(context).size.width * 0.394666666,
+                        width: MediaQuery.of(context).size.width * 0.444666666,
                         color: Colors.transparent,
-                        child: const Text(
-                          'Farm Name goes here',
-                          style: TextStyle(
+                        child: Text(
+                          widget.name,
+                          style: const TextStyle(
                               color: Color(0xFF000000),
                               fontFamily: 'PublicSans',
                               fontWeight: FontWeight.w400,
@@ -151,11 +228,11 @@ class CartItem extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 24.0),
                         child: Container(
                           width:
-                              MediaQuery.of(context).size.width * 0.394666666,
+                              MediaQuery.of(context).size.width * 0.444666666,
                           color: Colors.transparent,
-                          child: const Text(
-                            '\$90',
-                            style: TextStyle(
+                          child: Text(
+                            '\$${widget.price}',
+                            style: const TextStyle(
                                 color: Color(0xFF000000),
                                 fontFamily: 'PublicSans',
                                 fontWeight: FontWeight.w400,
@@ -163,8 +240,9 @@ class CartItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.394666666,
+                      Container(
+                        color: Colors.transparent,
+                        width: MediaQuery.of(context).size.width * 0.444666666,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -186,7 +264,34 @@ class CartItem extends StatelessWidget {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       InkWell(
-                                        onTap: () {},
+                                        onTap: () async {
+                                          final docRef = await FirebaseFirestore
+                                              .instance
+                                              .collection("users")
+                                              .doc(AuthenticationHelper()
+                                                  .userid
+                                                  .trim())
+                                              .collection('cart')
+                                              .where('imageUrl',
+                                                  isEqualTo: widget.image)
+                                              .get();
+
+                                          if (docRef.docs.first['qty'] == '1') {
+                                          } else {
+                                            docRef.docs.first.reference.update({
+                                              'qty': (int.parse(docRef
+                                                          .docs.first['qty']) -
+                                                      1)
+                                                  .toString(),
+                                              'subtotal': (double.parse(docRef
+                                                          .docs
+                                                          .first['subtotal']) -
+                                                      double.parse(docRef
+                                                          .docs.first['price']))
+                                                  .toStringAsFixed(2),
+                                            });
+                                          }
+                                        },
                                         child: const Icon(
                                           Icons.remove,
                                           size: 15,
@@ -197,9 +302,9 @@ class CartItem extends StatelessWidget {
                                                   .size
                                                   .width *
                                               0.04),
-                                      const Text(
-                                        '1',
-                                        style: TextStyle(
+                                      Text(
+                                        widget.qty,
+                                        style: const TextStyle(
                                             color: Color(0xFF000000),
                                             fontFamily: 'PublicSans',
                                             fontWeight: FontWeight.w400,
@@ -211,7 +316,31 @@ class CartItem extends StatelessWidget {
                                                   .width *
                                               0.04),
                                       InkWell(
-                                        onTap: () {},
+                                        onTap: () async {
+                                          final docRef = await FirebaseFirestore
+                                              .instance
+                                              .collection("users")
+                                              .doc(AuthenticationHelper()
+                                                  .userid
+                                                  .trim())
+                                              .collection('cart')
+                                              .where('imageUrl',
+                                                  isEqualTo: widget.image)
+                                              .get();
+
+                                          docRef.docs.first.reference.update({
+                                            'qty': (int.parse(docRef
+                                                        .docs.first['qty']) +
+                                                    1)
+                                                .toString(),
+                                            'subtotal': (double.parse(docRef
+                                                        .docs
+                                                        .first['subtotal']) +
+                                                    double.parse(docRef
+                                                        .docs.first['price']))
+                                                .toStringAsFixed(2),
+                                          });
+                                        },
                                         child: const Icon(
                                           Icons.add,
                                           size: 15,
@@ -220,27 +349,79 @@ class CartItem extends StatelessWidget {
                                     ]),
                               ),
                             ),
-                            Transform.translate(
-                              offset: const Offset(30.0, 5.0),
-                              child: Container(
-                                height: MediaQuery.of(context).size.height *
-                                    0.041871921,
-                                width: MediaQuery.of(context).size.width *
-                                    0.090666666,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(7),
-                                  color: const Color(0xFFFF4646),
-                                ),
-                                child: Center(
-                                  child: SizedBox(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.024938,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.04933333,
-                                    child: SvgPicture.asset(
-                                        'assets/icons/delete.svg',
-                                        color: Colors.white,
-                                        fit: BoxFit.fitHeight),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 10.0),
+                              child: InkWell(
+                                onTap: () async {
+                                  if (selectedItem.contains(widget.image)) {
+                                    selectedItem.remove(widget.image);
+                                  }
+                                  final docRef = await FirebaseFirestore
+                                      .instance
+                                      .collection("users")
+                                      .doc(AuthenticationHelper().userid.trim())
+                                      .collection('cart')
+                                      .where('imageUrl',
+                                          isEqualTo: widget.image)
+                                      .get();
+
+                                  print(docRef);
+
+                                  await docRef.docs.first.reference.delete();
+                                },
+                                child: Container(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.041871921,
+                                  width: MediaQuery.of(context).size.width *
+                                      0.090666666,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(7),
+                                    color: const Color(0xFFFF4646),
+                                  ),
+                                  child: InkWell(
+                                    child: Center(
+                                      child: SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.024938,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.04933333,
+                                        child: IgnorePointer(
+                                          child: InkWell(
+                                            onTap: () async {
+                                              if (selectedItem
+                                                  .contains(widget.image)) {
+                                                selectedItem
+                                                    .remove(widget.image);
+                                              }
+                                              final docRef =
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection("users")
+                                                      .doc(
+                                                          AuthenticationHelper()
+                                                              .userid
+                                                              .trim())
+                                                      .collection('cart')
+                                                      .where('imageUrl',
+                                                          isEqualTo:
+                                                              widget.image)
+                                                      .get();
+
+                                              print(docRef);
+
+                                              await docRef.docs.first.reference
+                                                  .delete();
+                                            },
+                                            child: SvgPicture.asset(
+                                                'assets/icons/delete.svg',
+                                                color: Colors.white,
+                                                fit: BoxFit.fitHeight),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),

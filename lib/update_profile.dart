@@ -1,21 +1,32 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 
 class UpdateProfile extends StatefulWidget {
-  const UpdateProfile({Key? key}) : super(key: key);
-
+  const UpdateProfile(
+      {Key? key,
+      required this.email,
+      required this.password,
+      required this.name})
+      : super(key: key);
+  final String email;
+  final String password;
+  final String name;
   @override
   State<UpdateProfile> createState() => _UpdateProfileState();
 }
 
 class _UpdateProfileState extends State<UpdateProfile> {
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  var nameController = TextEditingController();
+  var emailController = TextEditingController();
+  var passwordController = TextEditingController();
   FilePickerResult? result;
   String? fileName;
   PlatformFile? pickedfile;
@@ -49,6 +60,17 @@ class _UpdateProfileState extends State<UpdateProfile> {
   }
 
   bool obsecurePasswordOne = true;
+
+  @override
+  void initState() {
+    setState(() {
+      passwordController = TextEditingController(text: widget.password);
+      emailController = TextEditingController(text: widget.email);
+      nameController = TextEditingController(text: widget.name);
+    });
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,51 +118,93 @@ class _UpdateProfileState extends State<UpdateProfile> {
               height: MediaQuery.of(context).size.height * 0.05788177,
             ),
             InkWell(
-              onTap: () {
-                pickfile();
+              onTap: () async {
+                final picker = ImagePicker();
+                var pickedImage =
+                    await picker.pickImage(source: ImageSource.gallery);
+
+                if (pickedImage == null) {
+                } else {
+                  var tempImage = File(pickedImage.path);
+
+                  FirebaseStorage firebaseStorage = FirebaseStorage.instance;
+
+                  var response = await firebaseStorage
+                      .ref('usersAvatar')
+                      .child(
+                          '${DateTime.now().microsecond.toString()}${DateTime.now().second.toString()}')
+                      .putFile(tempImage);
+
+                  final docRef = FirebaseFirestore.instance
+                      .collection("users")
+                      .doc(AuthenticationHelper().userid.trim());
+
+                  await docRef.update(
+                      {'avatarUrl': await response.ref.getDownloadURL()});
+
+                  // ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                      "Updated profile picture",
+                      style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontFamily: 'PublicSans',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14),
+                    )),
+                  );
+                }
               },
               child: Center(
                 child: Container(
-                  height:
-                      MediaQuery.of(context).size.height * 0.1331527093596059,
-                  width: MediaQuery.of(context).size.width * 0.266666666,
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      bottomRight: Radius.circular(150.0),
-                      topRight: Radius.circular(150.0),
-                      bottomLeft: Radius.circular(150.0),
-                      topLeft: Radius.circular(150.0),
+                    height:
+                        MediaQuery.of(context).size.height * 0.1331527093596059,
+                    width: MediaQuery.of(context).size.width * 0.266666666,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(150.0),
+                        topRight: Radius.circular(150.0),
+                        bottomLeft: Radius.circular(150.0),
+                        topLeft: Radius.circular(150.0),
+                      ),
+                      color: Color(0xFFD9D9D9),
                     ),
-                    color: Color(0xFFD9D9D9),
-                  ),
-                  child: pickedfile == null
-                      ? Center(
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height *
-                                0.0472413793,
-                            width:
-                                MediaQuery.of(context).size.width * 0.04866666,
-                            child: SvgPicture.asset('assets/icons/camera.svg',
-                                color: Colors.black, fit: BoxFit.contain),
-                          ),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height *
-                                0.0472413793,
-                            width:
-                                MediaQuery.of(context).size.width * 0.04866666,
-                            child: Image.file(
-                              File(fileTodisplay!.path).absolute,
-                              height: 40,
-                              width: MediaQuery.of(context).size.width *
-                                  0.04866666,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                ),
+                    child: StreamBuilder<Object>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .where('userid',
+                                isEqualTo: AuthenticationHelper().userid.trim())
+                            .snapshots(),
+                        builder: (context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData) {
+                            return Stack(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: const Color(0xFFF4F4F4),
+                                  radius:
+                                      MediaQuery.of(context).size.width * 0.20,
+                                  backgroundImage: NetworkImage(
+                                      snapshot.data.docs.first['avatarUrl']),
+                                ),
+                                Center(
+                                  child: SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.0472413793,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.04866666,
+                                    child: SvgPicture.asset(
+                                        'assets/icons/camera.svg',
+                                        color: Colors.black,
+                                        fit: BoxFit.contain),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return Container();
+                          }
+                        })),
               ),
             ),
             const Center(
@@ -359,26 +423,85 @@ class _UpdateProfileState extends State<UpdateProfile> {
                   );
                 }
               },
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.0615763,
-                width: MediaQuery.of(context).size.width * 0.8033333,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        colors: [
-                          Color(0xFF7CD956),
-                          Color(0xFF3EA334),
-                        ])),
-                child: const Center(
-                  child: Text(
-                    'Continue',
-                    style: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontFamily: 'PublicSans',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16),
-                  ),
+              child: InkWell(
+                onTap: () async {
+                  if (nameController.text.isEmpty ||
+                      emailController.text.isEmpty ||
+                      passwordController.text.isEmpty) {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                        "Fill all elements of the form",
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontFamily: 'PublicSans',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14),
+                      )),
+                    );
+                  } else {
+                    setState(() {
+                      appisLoading = true;
+                    });
+                    final docRef = FirebaseFirestore.instance
+                        .collection("users")
+                        .doc(AuthenticationHelper().userid.trim());
+
+                    await docRef.update({
+                      'email': emailController.text,
+                      'name': nameController.text,
+                      'password': passwordController.text,
+                    });
+
+                    setState(() {
+                      appisLoading = false;
+                    });
+
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                        "Updated profile details",
+                        style: TextStyle(
+                            color: Color(0xFFFFFFFF),
+                            fontFamily: 'PublicSans',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14),
+                      )),
+                    );
+                  }
+                },
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.0615763,
+                  width: MediaQuery.of(context).size.width * 0.8033333,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          colors: [
+                            Color(0xFF7CD956),
+                            Color(0xFF3EA334),
+                          ])),
+                  child: Center(
+                      child: appisLoading == false
+                          ? const Text(
+                              'Continue',
+                              style: TextStyle(
+                                  color: Color(0xFFFFFFFF),
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16),
+                            )
+                          : const Center(
+                              child: SizedBox(
+                                height: 15,
+                                width: 15,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )),
                 ),
               ),
             ),

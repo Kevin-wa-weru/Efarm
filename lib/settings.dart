@@ -1,6 +1,4 @@
-import 'package:eshamba/about_us.dart';
-import 'package:eshamba/notifications.dart';
-import 'package:eshamba/post_request.dart';
+import 'package:eshamba/orders.dart';
 import 'package:eshamba/privacy_policy.dart';
 import 'package:eshamba/terms_and_conditions.dart';
 import 'package:eshamba/update_profile.dart';
@@ -9,8 +7,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Settings extends StatefulWidget {
-  const Settings({Key? key}) : super(key: key);
-
+  const Settings(
+      {Key? key,
+      required this.email,
+      required this.password,
+      required this.name})
+      : super(key: key);
+  final String email;
+  final String password;
+  final String name;
   @override
   State<Settings> createState() => _SettingsState();
 }
@@ -63,7 +68,11 @@ class _SettingsState extends State<Settings> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const UpdateProfile()));
+                            builder: (context) => UpdateProfile(
+                                  email: widget.email,
+                                  name: widget.name,
+                                  password: widget.password,
+                                )));
                   },
                   child: Container(
                     height: MediaQuery.of(context).size.height * 0.06773399,
@@ -117,7 +126,9 @@ class _SettingsState extends State<Settings> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const AboutUs()));
+                            builder: (context) => const Orders(
+                                  showbackArrow: true,
+                                )));
                   },
                   child: Container(
                     height: MediaQuery.of(context).size.height * 0.06773399,

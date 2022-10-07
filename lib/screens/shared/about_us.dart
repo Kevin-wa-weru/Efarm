@@ -48,7 +48,7 @@ class _AboutUsState extends State<AboutUs> {
               ],
             ),
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.064039408,
+              height: MediaQuery.of(context).size.height * 0.024039408,
             ),
             Padding(
               padding: EdgeInsets.only(
@@ -57,7 +57,7 @@ class _AboutUsState extends State<AboutUs> {
               child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.77066666,
                   child: const Text(
-                    'The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using Content here, content here, making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for lorem ipsum will uncover many web sites still in their infancy. Various versions have evolved over the years web page editors now use Lorem Ipsum as their default model text, and a search for lorem ipsum will uncover many web site',
+                    'E-farm application is the platform that will allow farmers to automate agricultural procedures, particularly marketing, such as displaying products, searching for and meeting with clients (vendors and final consumers).The main goal of an app goal is to create a well-organized digital market for agricultural products in East Africa.Chimbo application is the platform created as a smart, sustainable digital solution that offers well-established, accredited, transparent and secure sales process pipelines for the real estate industry. Our custom features and solutions leverage the best out of existing modern technology in support of the buyers’ and sellers’ requirements and needs.',
                     style: TextStyle(
                         color: Color(0xFF000000),
                         fontFamily: 'PublicSans',

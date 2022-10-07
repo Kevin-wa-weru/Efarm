@@ -1,4 +1,10 @@
-import 'package:eshamba/about_us.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eshamba/Cubits/get_blogs_cubit.dart';
+import 'package:eshamba/Cubits/get_farms_cubit.dart';
+import 'package:eshamba/Cubits/get_posted_products_cubit.dart';
+import 'package:eshamba/detailed_blog.dart';
+import 'package:eshamba/detailed_farm_detail.dart';
+import 'package:eshamba/screens/shared/about_us.dart';
 import 'package:eshamba/blogs.dart';
 import 'package:eshamba/book_lorry_step1.dart';
 import 'package:eshamba/cart.dart';
@@ -9,9 +15,13 @@ import 'package:eshamba/orders.dart';
 import 'package:eshamba/post_request.dart';
 import 'package:eshamba/privacy_policy.dart';
 import 'package:eshamba/profile.dart';
+import 'package:eshamba/search_page.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:eshamba/terms_and_conditions.dart';
+import 'package:eshamba/view_all.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,6 +34,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String? selectedCatogory;
   int currentIndex = 0;
+
+  @override
+  void initState() {
+    context.read<GetPostedProductsCubit>().getProducts();
+    context.read<GetFarmsCubit>().getFarms();
+    context.read<GetBlogsCubit>().getBlogs();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -670,14 +688,95 @@ class _HomePageState extends State<HomePage> {
                                             builder: (context) =>
                                                 const Notifications()));
                                   },
-                                  child: SizedBox(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.033399014,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.05066666666,
-                                    child: SvgPicture.asset(
-                                        'assets/icons/bell.svg',
-                                        fit: BoxFit.fitHeight),
+                                  child: Stack(
+                                    children: [
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.033399014,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.05066666666,
+                                        child: SvgPicture.asset(
+                                            'assets/icons/bell.svg',
+                                            fit: BoxFit.fitHeight),
+                                      ),
+                                      Transform.translate(
+                                        offset: const Offset(10.0, -10.0),
+                                        child: Row(
+                                          children: [
+                                            StreamBuilder<Object>(
+                                                stream: FirebaseFirestore
+                                                    .instance
+                                                    .collection('users')
+                                                    .doc(AuthenticationHelper()
+                                                        .userid
+                                                        .trim())
+                                                    .collection('notifications')
+                                                    .snapshots(),
+                                                builder: (context,
+                                                    AsyncSnapshot snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    List allnewNotifications =
+                                                        [];
+                                                    for (var item
+                                                        in snapshot.data.docs) {
+                                                      DateTime date =
+                                                          DateTime.parse(
+                                                              item['date']
+                                                                  .toDate()
+                                                                  .toString());
+
+                                                      if ((DateTime.now()
+                                                              .difference(date)
+                                                              .inDays <=
+                                                          1)) {
+                                                        allnewNotifications
+                                                            .add(1);
+                                                      }
+                                                    }
+
+                                                    if (allnewNotifications
+                                                        .isNotEmpty) {
+                                                      return Container(
+                                                          height: 15,
+                                                          width: 15,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              70),
+                                                                  color: Colors
+                                                                      .black,
+                                                                  border: Border
+                                                                      .all(
+                                                                    color: const Color(
+                                                                        0xFF202020),
+                                                                    width: 1,
+                                                                  )),
+                                                          child: Center(
+                                                            child: Text(
+                                                                allnewNotifications
+                                                                    .length
+                                                                    .toString(),
+                                                                style: const TextStyle(
+                                                                    fontSize:
+                                                                        10,
+                                                                    color: Colors
+                                                                        .white)),
+                                                          ));
+                                                    } else {
+                                                      return Container();
+                                                    }
+                                                  } else {
+                                                    return Container();
+                                                  }
+                                                })
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(
@@ -692,6 +791,7 @@ class _HomePageState extends State<HomePage> {
                                                 const Profile()));
                                   },
                                   child: const CircleAvatar(
+                                    backgroundColor: Color(0xFFF4F4F4),
                                     radius: 15,
                                     backgroundImage:
                                         AssetImage('assets/images/woman.jpg'),
@@ -710,40 +810,50 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(left: 20.0),
-                            child: Container(
-                              height: MediaQuery.of(context).size.height *
-                                  0.0591133,
-                              width: MediaQuery.of(context).size.width *
-                                  0.7493333333,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                                color: const Color(0xFFF4F4F4),
-                              ),
-                              child: Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 22.0, right: 17),
-                                    child: SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.0233990,
-                                      width: MediaQuery.of(context).size.width *
-                                          0.050666666,
-                                      child: SvgPicture.asset(
-                                          'assets/icons/search.svg',
-                                          fit: BoxFit.fitHeight),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const Searching()));
+                              },
+                              child: Container(
+                                height: MediaQuery.of(context).size.height *
+                                    0.0591133,
+                                width: MediaQuery.of(context).size.width *
+                                    0.7493333333,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  color: const Color(0xFFF4F4F4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 22.0, right: 17),
+                                      child: SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.0233990,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.050666666,
+                                        child: SvgPicture.asset(
+                                            'assets/icons/search.svg',
+                                            fit: BoxFit.fitHeight),
+                                      ),
                                     ),
-                                  ),
-                                  const Text(
-                                    'Search',
-                                    style: TextStyle(
-                                        color: Colors.black54,
-                                        fontFamily: 'PublicSans',
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 12),
-                                  ),
-                                ],
+                                    const Text(
+                                      'Search',
+                                      style: TextStyle(
+                                          color: Colors.black54,
+                                          fontFamily: 'PublicSans',
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 12),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -795,6 +905,12 @@ class _HomePageState extends State<HomePage> {
                                 onTap: () {
                                   setState(() {
                                     selectedCatogory = cateogry[index];
+
+                                    context
+                                        .read<GetPostedProductsCubit>()
+                                        .getProducts();
+                                    context.read<GetFarmsCubit>().getFarms();
+                                    context.read<GetBlogsCubit>().getBlogs();
                                   });
                                 },
                                 child: Center(
@@ -861,24 +977,35 @@ class _HomePageState extends State<HomePage> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(right: 20.0),
-                            child: Row(
-                              children: const [
-                                Text(
-                                  'View all',
-                                  style: TextStyle(
-                                      color: Color(0xFF000000),
-                                      fontFamily: 'PublicSans',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 14),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(left: 10.0),
-                                  child: Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 15,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ViewAllItems(
+                                              selectedCategory: 'products',
+                                            )));
+                              },
+                              child: Row(
+                                children: const [
+                                  Text(
+                                    'View all',
+                                    style: TextStyle(
+                                        color: Color(0xFF000000),
+                                        fontFamily: 'PublicSans',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 14),
                                   ),
-                                )
-                              ],
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 10.0),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 15,
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           )
                         ],
@@ -892,11 +1019,45 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.transparent,
                           height:
                               MediaQuery.of(context).size.height * 0.287093596,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: cateogry.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return const SingleTopProduct();
+                          child: BlocBuilder<GetPostedProductsCubit,
+                              GetPostedProductsState>(
+                            builder: (context, state) {
+                              return state.when(
+                                  initial: () {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: 1,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return const SingleLoadingProduct();
+                                      },
+                                    );
+                                  },
+                                  loading: () {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: 1,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return const SingleLoadingProduct();
+                                      },
+                                    );
+                                  },
+                                  loaded: (products) {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: products.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return SingleTopProduct(
+                                          product: products[index],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  error: (String message) => Center(
+                                        child: Text(message),
+                                      ));
                             },
                           ),
                         ),
@@ -921,17 +1082,28 @@ class _HomePageState extends State<HomePage> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(right: 20.0),
-                            child: Row(
-                              children: const [
-                                Text(
-                                  'View all',
-                                  style: TextStyle(
-                                      color: Color(0xFF000000),
-                                      fontFamily: 'PublicSans',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 14),
-                                ),
-                              ],
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ViewAllItems(
+                                              selectedCategory: 'farms',
+                                            )));
+                              },
+                              child: Row(
+                                children: const [
+                                  Text(
+                                    'View all',
+                                    style: TextStyle(
+                                        color: Color(0xFF000000),
+                                        fontFamily: 'PublicSans',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 14),
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         ],
@@ -945,11 +1117,44 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.transparent,
                           height:
                               MediaQuery.of(context).size.height * 0.4878325,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: cateogry.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return const SingleFarm();
+                          child: BlocBuilder<GetFarmsCubit, GetFarmsState>(
+                            builder: (context, state) {
+                              return state.when(
+                                  initial: () {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: 1,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return const SingleFarmLoading();
+                                      },
+                                    );
+                                  },
+                                  loading: () {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: 1,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return const SingleFarmLoading();
+                                      },
+                                    );
+                                  },
+                                  loaded: (farms) {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: farms.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return SingleFarm(
+                                          farm: farms[index],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  error: (String message) => Center(
+                                        child: Text(message),
+                                      ));
                             },
                           ),
                         ),
@@ -974,24 +1179,35 @@ class _HomePageState extends State<HomePage> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(right: 20.0),
-                            child: Row(
-                              children: const [
-                                Text(
-                                  'View all',
-                                  style: TextStyle(
-                                      color: Color(0xFF000000),
-                                      fontFamily: 'PublicSans',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 14),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(left: 10.0),
-                                  child: Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 15,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ViewAllItems(
+                                              selectedCategory: 'blogs',
+                                            )));
+                              },
+                              child: Row(
+                                children: const [
+                                  Text(
+                                    'View all',
+                                    style: TextStyle(
+                                        color: Color(0xFF000000),
+                                        fontFamily: 'PublicSans',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 14),
                                   ),
-                                )
-                              ],
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 10.0),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 15,
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           )
                         ],
@@ -1005,11 +1221,44 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.transparent,
                           height:
                               MediaQuery.of(context).size.height * 0.26231527,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: cateogry.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return const SingleHomePageBlog();
+                          child: BlocBuilder<GetBlogsCubit, GetBlogsState>(
+                            builder: (context, state) {
+                              return state.when(
+                                  initial: () {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: cateogry.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return const SingleHomePageBlogLoading();
+                                      },
+                                    );
+                                  },
+                                  loading: () {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: cateogry.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return const SingleHomePageBlogLoading();
+                                      },
+                                    );
+                                  },
+                                  loaded: (blogs) {
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: blogs.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return SingleHomePageBlog(
+                                          blog: blogs[index],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  error: (String message) => Center(
+                                        child: Text(message),
+                                      ));
                             },
                           ),
                         ),
@@ -1021,7 +1270,9 @@ class _HomePageState extends State<HomePage> {
               const Cart(),
               const Chat(),
               const Blogs(),
-              const Orders(),
+              const Orders(
+                showbackArrow: false,
+              ),
             ],
           ),
         ),
@@ -1032,6 +1283,125 @@ class _HomePageState extends State<HomePage> {
 
 class SingleHomePageBlog extends StatelessWidget {
   const SingleHomePageBlog({
+    Key? key,
+    required this.blog,
+  }) : super(key: key);
+  final Map<String, dynamic> blog;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => DetailedBlog(
+                        blog: blog,
+                      )));
+        },
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(7.0),
+            topRight: Radius.circular(7.0),
+            bottomLeft: Radius.circular(7.0),
+            bottomRight: Radius.circular(7.0),
+          ),
+          child: Card(
+            elevation: 2,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.26231527,
+              width: MediaQuery.of(context).size.width * 0.5386666,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(7),
+                color: Colors.transparent,
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.147783251,
+                    width: MediaQuery.of(context).size.width * 0.538666666,
+                    child: FittedBox(
+                      fit: BoxFit.fill,
+                      child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(40.0),
+                            topRight: Radius.circular(40.0),
+                          ),
+                          child: Image.network(blog['image'])),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0, left: 10.0),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Text(
+                            blog['postedBy'],
+                            style: const TextStyle(
+                                color: Color(0xFF000000),
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 9.16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7.0, left: 10.0),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Text(
+                            blog['title'],
+                            style: const TextStyle(
+                                color: Color(0xFF000000),
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 14.18),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3.0, left: 10.0),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Container(
+                            color: Colors.transparent,
+                            width:
+                                MediaQuery.of(context).size.width * 0.488666666,
+                            child: Text(
+                              blog['description'],
+                              style: const TextStyle(
+                                  color: Color(0xFF000000),
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 10.00),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SingleHomePageBlogLoading extends StatelessWidget {
+  const SingleHomePageBlogLoading({
     Key? key,
   }) : super(key: key);
 
@@ -1048,12 +1418,13 @@ class SingleHomePageBlog extends StatelessWidget {
         ),
         child: Card(
           elevation: 2,
+          color: const Color(0xFFE8E8E8),
           child: Container(
             height: MediaQuery.of(context).size.height * 0.26231527,
             width: MediaQuery.of(context).size.width * 0.5386666,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(7),
-              color: Colors.transparent,
+              color: const Color(0xFFE8E8E8),
             ),
             child: Column(
               children: [
@@ -1067,42 +1438,40 @@ class SingleHomePageBlog extends StatelessWidget {
                           topLeft: Radius.circular(40.0),
                           topRight: Radius.circular(40.0),
                         ),
-                        child: Image.asset('assets/images/veges.jpg')),
+                        child: Container()),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0, left: 10.0),
                   child: Row(
-                    children: const [
+                    children: [
                       Padding(
-                        padding: EdgeInsets.only(left: 4.0),
-                        child: Text(
-                          'Jhone Doe',
-                          style: TextStyle(
-                              color: Color(0xFF000000),
-                              fontFamily: 'PublicSans',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 9.16),
-                        ),
-                      ),
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Container(
+                            height: 10,
+                            width: 50,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.white,
+                            ),
+                          )),
                     ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 7.0, left: 10.0),
                   child: Row(
-                    children: const [
+                    children: [
                       Padding(
-                        padding: EdgeInsets.only(left: 4.0),
-                        child: Text(
-                          'Vegetable',
-                          style: TextStyle(
-                              color: Color(0xFF000000),
-                              fontFamily: 'PublicSans',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 14.18),
-                        ),
-                      ),
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Container(
+                            height: 10,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.white,
+                            ),
+                          )),
                     ],
                   ),
                 ),
@@ -1113,18 +1482,13 @@ class SingleHomePageBlog extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(left: 4.0),
                         child: Container(
-                          color: Colors.transparent,
-                          width:
-                              MediaQuery.of(context).size.width * 0.488666666,
-                          child: const Text(
-                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                            style: TextStyle(
-                                color: Color(0xFF000000),
-                                fontFamily: 'PublicSans',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 10.00),
-                          ),
-                        ),
+                            width:
+                                MediaQuery.of(context).size.width * 0.488666666,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.white,
+                            ),
+                            child: Container()),
                       ),
                     ],
                   ),
@@ -1141,6 +1505,175 @@ class SingleHomePageBlog extends StatelessWidget {
 class SingleFarm extends StatelessWidget {
   const SingleFarm({
     Key? key,
+    required this.farm,
+  }) : super(key: key);
+
+  final Map<String, dynamic> farm;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => DetailedFarm(
+                        farm: farm,
+                      )));
+        },
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(7.0),
+            topRight: Radius.circular(7.0),
+            bottomLeft: Radius.circular(7.0),
+            bottomRight: Radius.circular(7.0),
+          ),
+          child: Card(
+            elevation: 2,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.4778325,
+              width: MediaQuery.of(context).size.width * 0.89333333,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(7),
+                color: Colors.transparent,
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.2426108,
+                    width: MediaQuery.of(context).size.width * 0.89333333,
+                    child: FittedBox(
+                      fit: BoxFit.fill,
+                      child: Image.network(farm['link']),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 11.0, left: 10.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          farm['name'],
+                          style: const TextStyle(
+                              color: Color(0xFF000000),
+                              fontFamily: 'PublicSans',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, left: 10.0),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          height:
+                              MediaQuery.of(context).size.height * 0.01939655,
+                          width: MediaQuery.of(context).size.width * 0.0330133,
+                          child: SvgPicture.asset('assets/icons/location.svg',
+                              fit: BoxFit.contain),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            farm['location'],
+                            style: const TextStyle(
+                                color: Color(0xFF000000),
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, left: 10.0),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          height:
+                              MediaQuery.of(context).size.height * 0.01939655,
+                          width: MediaQuery.of(context).size.width * 0.0330133,
+                          child: SvgPicture.asset('assets/icons/clock.svg',
+                              fit: BoxFit.contain),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            'Available: ${farm['time']}',
+                            style: const TextStyle(
+                                color: Color(0xFF000000),
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0, left: 10.0),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: SizedBox(
+                            width:
+                                MediaQuery.of(context).size.width * 0.79333333,
+                            child: Text(
+                              farm['description'],
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: Color(0xFF707070),
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.0566502,
+                      width: MediaQuery.of(context).size.width * 0.776,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(7),
+                          gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              colors: [
+                                Color(0xFF7CD956),
+                                Color(0xFF3EA334),
+                              ])),
+                      child: const Center(
+                        child: Text(
+                          'Tembelea Shamba',
+                          style: TextStyle(
+                              color: Color(0xFFFFFFFF),
+                              fontFamily: 'PublicSans',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SingleFarmLoading extends StatelessWidget {
+  const SingleFarmLoading({
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -1156,12 +1689,13 @@ class SingleFarm extends StatelessWidget {
         ),
         child: Card(
           elevation: 2,
+          color: const Color(0xFFE8E8E8),
           child: Container(
             height: MediaQuery.of(context).size.height * 0.4778325,
             width: MediaQuery.of(context).size.width * 0.89333333,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(7),
-              color: Colors.transparent,
+              color: const Color(0xFFE8E8E8),
             ),
             child: Column(
               children: [
@@ -1175,43 +1709,21 @@ class SingleFarm extends StatelessWidget {
                           topLeft: Radius.circular(40.0),
                           topRight: Radius.circular(40.0),
                         ),
-                        child: Image.asset('assets/images/veges.jpg')),
+                        child: Container(
+                          color: Colors.white,
+                        )),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 11.0, left: 10.0),
                   child: Row(
-                    children: const [
-                      Text(
-                        'Farm Name',
-                        style: TextStyle(
-                            color: Color(0xFF000000),
-                            fontFamily: 'PublicSans',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0, left: 10.0),
-                  child: Row(
                     children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.01939655,
-                        width: MediaQuery.of(context).size.width * 0.0330133,
-                        child: SvgPicture.asset('assets/icons/location.svg',
-                            fit: BoxFit.contain),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
-                        child: Text(
-                          'Juja, Kikuyu',
-                          style: TextStyle(
-                              color: Color(0xFF000000),
-                              fontFamily: 'PublicSans',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12),
+                      Container(
+                        height: 20,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(7),
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -1221,21 +1733,27 @@ class SingleFarm extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 8.0, left: 10.0),
                   child: Row(
                     children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.01939655,
-                        width: MediaQuery.of(context).size.width * 0.0330133,
-                        child: SvgPicture.asset('assets/icons/clock.svg',
-                            fit: BoxFit.contain),
+                      Container(
+                        height: 10,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(7),
+                          color: Colors.white,
+                        ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
-                        child: Text(
-                          'Available: 11:00 am to 1:30pm',
-                          style: TextStyle(
-                              color: Color(0xFF000000),
-                              fontFamily: 'PublicSans',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, left: 10.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 10,
+                        width: 140,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(7),
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -1244,16 +1762,16 @@ class SingleFarm extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0, left: 10.0),
                   child: Row(
-                    children: const [
+                    children: [
                       Padding(
-                        padding: EdgeInsets.only(left: 4.0),
-                        child: Text(
-                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-                          style: TextStyle(
-                              color: Color(0xFF707070),
-                              fontFamily: 'PublicSans',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 10),
+                        padding: const EdgeInsets.only(left: 4.0),
+                        child: Container(
+                          height: 10,
+                          width: 160,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(7),
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -1265,16 +1783,12 @@ class SingleFarm extends StatelessWidget {
                     height: MediaQuery.of(context).size.height * 0.0566502,
                     width: MediaQuery.of(context).size.width * 0.776,
                     decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(7),
-                        gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            colors: [
-                              Color(0xFF7CD956),
-                              Color(0xFF3EA334),
-                            ])),
+                      borderRadius: BorderRadius.circular(7),
+                      color: Colors.white,
+                    ),
                     child: const Center(
                       child: Text(
-                        'Tembelea Shamba',
+                        '',
                         style: TextStyle(
                             color: Color(0xFFFFFFFF),
                             fontFamily: 'PublicSans',
@@ -1293,10 +1807,21 @@ class SingleFarm extends StatelessWidget {
   }
 }
 
-class SingleTopProduct extends StatelessWidget {
+class SingleTopProduct extends StatefulWidget {
   const SingleTopProduct({
     Key? key,
+    required this.product,
   }) : super(key: key);
+
+  final Map<String, dynamic> product;
+
+  @override
+  State<SingleTopProduct> createState() => _SingleTopProductState();
+}
+
+class _SingleTopProductState extends State<SingleTopProduct> {
+  bool addingToCart = false;
+  String? productbeingAdded;
 
   @override
   Widget build(BuildContext context) {
@@ -1330,23 +1855,26 @@ class SingleTopProduct extends StatelessWidget {
                             topLeft: Radius.circular(40.0),
                             topRight: Radius.circular(40.0),
                           ),
-                          child: Image.asset('assets/images/veges.jpg')),
+                          child: Image.network(
+                            widget.product['imageURl'],
+                          )),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0, left: 12.0),
                     child: Row(
-                      children: const [
+                      children: [
                         CircleAvatar(
+                          backgroundColor: const Color(0xFFE8E8E8),
                           radius: 15,
                           backgroundImage:
-                              AssetImage('assets/images/woman.jpg'),
+                              NetworkImage(widget.product['postedByAvatarUrl']),
                         ),
                         Padding(
-                          padding: EdgeInsets.only(left: 8.0),
+                          padding: const EdgeInsets.only(left: 8.0),
                           child: Text(
-                            'Ali Hassan',
-                            style: TextStyle(
+                            widget.product['postedByName'],
+                            style: const TextStyle(
                                 color: Color(0xFF000000),
                                 fontFamily: 'PublicSans',
                                 fontWeight: FontWeight.w300,
@@ -1365,10 +1893,10 @@ class SingleTopProduct extends StatelessWidget {
                             padding:
                                 const EdgeInsets.only(top: 4.0, left: 50.0),
                             child: Row(
-                              children: const [
+                              children: [
                                 Text(
-                                  'Vegatable',
-                                  style: TextStyle(
+                                  widget.product['productName'],
+                                  style: const TextStyle(
                                       color: Color(0xFF000000),
                                       fontFamily: 'PublicSans',
                                       fontWeight: FontWeight.w300,
@@ -1381,15 +1909,237 @@ class SingleTopProduct extends StatelessWidget {
                             padding:
                                 const EdgeInsets.only(top: 6.0, left: 27.0),
                             child: Row(
-                              children: const [
+                              children: [
                                 Text(
-                                  '\$8.90',
-                                  style: TextStyle(
+                                  '\$${widget.product['productPrice']}',
+                                  style: const TextStyle(
                                       color: Color(0xFF39B54A),
                                       fontFamily: 'PublicSans',
                                       fontWeight: FontWeight.w300,
                                       fontSize: 14),
                                 ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: InkWell(
+                          onTap: () async {
+                            setState(() {
+                              addingToCart = true;
+                              productbeingAdded = widget.product['imageURl'];
+                            });
+
+                            final checkRef = await FirebaseFirestore.instance
+                                .collection("users")
+                                .doc(AuthenticationHelper().userid.trim())
+                                .collection('cart')
+                                .where('imageUrl',
+                                    isEqualTo: widget.product['imageURl'])
+                                .get();
+                            if (checkRef.docs.isEmpty) {
+                              final docRef = FirebaseFirestore.instance
+                                  .collection("users")
+                                  .doc(AuthenticationHelper().userid.trim())
+                                  .collection('cart');
+
+                              await docRef.add({
+                                'name': widget.product['productName'],
+                                'price': widget.product['productPrice'],
+                                'imageUrl': widget.product['imageURl'],
+                                'qty': '1',
+                                'subtotal': widget.product['productPrice'],
+                              });
+
+                              setState(() {
+                                addingToCart = false;
+                                productbeingAdded = '';
+                              });
+
+                              // ignore: use_build_context_synchronously
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                  "Added to cart",
+                                  style: TextStyle(
+                                      color: Color(0xFFFFFFFF),
+                                      fontFamily: 'PublicSans',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14),
+                                )),
+                              );
+                            } else {
+                              setState(() {
+                                addingToCart = false;
+                                productbeingAdded = '';
+                              });
+                              // ignore: use_build_context_synchronously
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                  "Already in cart",
+                                  style: TextStyle(
+                                      color: Color(0xFFFFFFFF),
+                                      fontFamily: 'PublicSans',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14),
+                                )),
+                              );
+                            }
+                          },
+                          child: Container(
+                            height:
+                                MediaQuery.of(context).size.height * 0.046798,
+                            width: MediaQuery.of(context).size.width *
+                                0.258666666666,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                gradient: const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    colors: [
+                                      Color(0xFF7CD956),
+                                      Color(0xFF3EA334),
+                                    ])),
+                            child: productbeingAdded ==
+                                        widget.product['imageURl'] &&
+                                    addingToCart == true
+                                ? const Center(
+                                    child: SizedBox(
+                                      height: 15,
+                                      width: 15,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Center(
+                                    child: Text(
+                                      'Add to cart',
+                                      style: TextStyle(
+                                          color: Color(0xFFFFFFFF),
+                                          fontFamily: 'PublicSans',
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 14),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              )),
+        ),
+      ),
+    );
+  }
+}
+
+class SingleLoadingProduct extends StatelessWidget {
+  const SingleLoadingProduct({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10.0),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(7.0),
+          topRight: Radius.circular(7.0),
+          bottomLeft: Radius.circular(7.0),
+          bottomRight: Radius.circular(7.0),
+        ),
+        child: Card(
+          color: const Color(0xFFE8E8E8),
+          elevation: 2,
+          child: Container(
+              height: MediaQuery.of(context).size.height * 0.277093596,
+              width: MediaQuery.of(context).size.width * 0.893333333,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(7),
+                color: const Color(0xFFE8E8E8),
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.164433497,
+                    width: MediaQuery.of(context).size.width * 0.893333333,
+                    child: FittedBox(
+                      fit: BoxFit.fill,
+                      child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(40.0),
+                            topRight: Radius.circular(40.0),
+                          ),
+                          child: Container(
+                            color: const Color(0xFFE8E8E8),
+                          )),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, left: 12.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(700),
+                            color: Colors.white,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Container(
+                            height: 20,
+                            width: 200,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(top: 4.0, left: 50.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 100,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(7),
+                                    color: Colors.white,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(top: 6.0, left: 27.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 70,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(7),
+                                    color: Colors.white,
+                                  ),
+                                )
                               ],
                             ),
                           ),
@@ -1403,15 +2153,10 @@ class SingleTopProduct extends StatelessWidget {
                               0.258666666666,
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25),
-                              gradient: const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  colors: [
-                                    Color(0xFF7CD956),
-                                    Color(0xFF3EA334),
-                                  ])),
+                              color: Colors.white),
                           child: const Center(
                             child: Text(
-                              'Add to cart',
+                              '',
                               style: TextStyle(
                                   color: Color(0xFFFFFFFF),
                                   fontFamily: 'PublicSans',
