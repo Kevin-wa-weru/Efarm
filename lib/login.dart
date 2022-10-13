@@ -1,9 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eshamba/forgot_password.dart';
 import 'package:eshamba/homepage.dart';
 import 'package:eshamba/registration.dart';
+import 'package:eshamba/screens/driver/driver_homePage.dart';
 import 'package:eshamba/screens/driver/introduction.dart';
 import 'package:eshamba/services/cruds.dart';
 import 'package:eshamba/vendor.dart';
+import 'package:eshamba/vendorpage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -305,21 +308,31 @@ class _LoginState extends State<Login> {
                           setState(() {
                             appIsloading = true;
                           });
+                          print(emailController.text.trim());
+                          final docRef = await FirebaseFirestore.instance
+                              .collection("users")
+                              .where('email',
+                                  isEqualTo: 'khayekaalex76@gmail.com')
+                              .get();
+
+                          print(docRef.docs);
+
+                          var user = docRef.docs.first.data()['userType'];
+
                           await AuthenticationHelper()
                               .signIn(
                             email: emailController.text,
                             password: passwordController.text,
                           )
                               .then((result) async {
-                            setState(() {
-                              appIsloading = false;
-                            });
-
                             if (result == null) {
-                              if (widget.usertype == 'user') {
+                              if (user == 'user') {
                                 SharedPreferences prefs =
                                     await SharedPreferences.getInstance();
                                 prefs.setString('stringValue', "user");
+                                setState(() {
+                                  appIsloading = false;
+                                });
                                 // ignore: use_build_context_synchronously
                                 Navigator.push(
                                     context,
@@ -328,29 +341,40 @@ class _LoginState extends State<Login> {
                                             const HomePage()));
                               }
 
-                              if (widget.usertype == 'Vendor') {
+                              if (user == 'Vendor') {
                                 SharedPreferences prefs =
                                     await SharedPreferences.getInstance();
                                 prefs.setString('stringValue', "Vendor");
-                                // ignore: use_build_context_synchronously
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => const Vendor()));
-                              }
-
-                              if (widget.usertype == 'driver') {
-                                SharedPreferences prefs =
-                                    await SharedPreferences.getInstance();
-                                prefs.setString('stringValue', "driver");
+                                setState(() {
+                                  appIsloading = false;
+                                });
                                 // ignore: use_build_context_synchronously
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            const DriverProfileadd()));
+                                            const Vendorprofile()));
+                              }
+
+                              if (user == 'driver') {
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                prefs.setString('stringValue', "driver");
+                                setState(() {
+                                  appIsloading = false;
+                                });
+                                // ignore: use_build_context_synchronously
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const DriverHomePage()));
                               }
                             } else {
+                              setState(() {
+                                appIsloading = false;
+                              });
+                              // ignore: use_build_context_synchronously
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                     content: Text(
@@ -415,7 +439,9 @@ class _LoginState extends State<Login> {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => Registration()));
+                                    builder: (context) => Registration(
+                                          usertype: widget.usertype,
+                                        )));
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

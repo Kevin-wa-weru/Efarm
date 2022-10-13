@@ -19,6 +19,8 @@ import 'package:eshamba/search_page.dart';
 import 'package:eshamba/services/cruds.dart';
 import 'package:eshamba/terms_and_conditions.dart';
 import 'package:eshamba/view_all.dart';
+import 'package:filter_list/filter_list.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,6 +36,47 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String? selectedCatogory;
   int currentIndex = 0;
+
+  List<String> userList = [
+    "Price ",
+    "Date Added",
+    "Most Reviwed ",
+    "Near me ",
+    "Natural Products ",
+    "Machineries ",
+    "Tools ",
+    "Animals ",
+  ];
+
+  List<String> selectedUserList = [];
+  void openFilterDialog() async {
+    await FilterListDialog.display<String>(
+      context,
+      hideSearchField: true,
+      height: 300,
+      themeData: FilterListThemeData(context,
+          controlButtonBarTheme: ControlButtonBarThemeData(context,
+              controlButtonTheme: const ControlButtonThemeData(
+                  primaryButtonBackgroundColor: Color(0xFF3EA334))),
+          choiceChipTheme: const ChoiceChipThemeData(
+              selectedBackgroundColor: Color(0xFF3EA334))),
+      listData: userList,
+      selectedListData: selectedUserList,
+      choiceChipLabel: (user) => user,
+      validateSelectedItem: (list, val) => list!.contains(val),
+      onItemSearch: (user, query) {
+        return user.toLowerCase().contains(query.toLowerCase());
+      },
+      onApplyButtonClick: (list) {
+        setState(() {
+          selectedUserList = List.from(list!);
+        });
+        context.read<GetPostedProductsCubit>().getProducts();
+        context.read<GetFarmsCubit>().getFarms();
+        Navigator.pop(context);
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -782,21 +825,78 @@ class _HomePageState extends State<HomePage> {
                                 const SizedBox(
                                   width: 15,
                                 ),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const Profile()));
-                                  },
-                                  child: const CircleAvatar(
-                                    backgroundColor: Color(0xFFF4F4F4),
-                                    radius: 15,
-                                    backgroundImage:
-                                        AssetImage('assets/images/woman.jpg'),
-                                  ),
-                                )
+                                StreamBuilder<Object>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .where('userid',
+                                            isEqualTo: AuthenticationHelper()
+                                                .userid
+                                                .trim())
+                                        .snapshots(),
+                                    builder: (context, AsyncSnapshot snapshot) {
+                                      if (snapshot.hasData) {
+                                        return InkWell(
+                                          onTap: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const Profile()));
+                                          },
+                                          child: Container(
+                                            child: snapshot.data.docs
+                                                        .first['avatarUrl'] ==
+                                                    ''
+                                                ? Center(
+                                                    child: Container(
+                                                      height: 40,
+                                                      width: 40,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(100),
+                                                        color: const Color(
+                                                            0xFFE8E8E8),
+                                                      ),
+                                                      child: Center(
+                                                        child: SizedBox(
+                                                          height: MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .height *
+                                                              0.0147783251,
+                                                          width: MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .width *
+                                                              0.04,
+                                                          child: SvgPicture.asset(
+                                                              'assets/icons/user.svg',
+                                                              color: Colors
+                                                                  .black12,
+                                                              fit: BoxFit
+                                                                  .contain),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : CircleAvatar(
+                                                    backgroundColor:
+                                                        const Color(0xFFF4F4F4),
+                                                    radius: 15,
+                                                    backgroundImage:
+                                                        NetworkImage(snapshot
+                                                                .data
+                                                                .docs
+                                                                .first[
+                                                            'avatarUrl']),
+                                                  ),
+                                          ),
+                                        );
+                                      } else {
+                                        return Container();
+                                      }
+                                    })
                               ],
                             ),
                           )
@@ -861,13 +961,18 @@ class _HomePageState extends State<HomePage> {
                             width:
                                 MediaQuery.of(context).size.width * 0.06933333,
                           ),
-                          SizedBox(
-                            height:
-                                MediaQuery.of(context).size.height * 0.0233990,
-                            width:
-                                MediaQuery.of(context).size.width * 0.050666666,
-                            child: SvgPicture.asset('assets/icons/filter.svg',
-                                fit: BoxFit.fitHeight),
+                          InkWell(
+                            onTap: () {
+                              openFilterDialog();
+                            },
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height *
+                                  0.0233990,
+                              width: MediaQuery.of(context).size.width *
+                                  0.050666666,
+                              child: SvgPicture.asset('assets/icons/filter.svg',
+                                  fit: BoxFit.fitHeight),
+                            ),
                           ),
                         ],
                       ),

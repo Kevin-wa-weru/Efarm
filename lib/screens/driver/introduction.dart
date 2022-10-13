@@ -1,49 +1,103 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eshamba/models/days.dart';
 import 'package:eshamba/screens/driver/driver_homePage.dart';
+import 'package:eshamba/search_location.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_geocoding/google_geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:location/location.dart' as locater;
 
 class DriverProfileadd extends StatefulWidget {
-  const DriverProfileadd({super.key});
+  const DriverProfileadd({Key? key}) : super(key: key);
 
   @override
   State<DriverProfileadd> createState() => _DriverProfileaddState();
 }
 
 class _DriverProfileaddState extends State<DriverProfileadd> {
-  bool istoggled = false;
-  final _streetnocontroller = TextEditingController();
-
-  String googleApikey = "AIzaSyAmQ9UeFrn_LxD4SzDSYlCHcVIj0V2qbt0";
-  String startLocation = "Search your location";
-
-  LatLng selectedLocation = const LatLng(0, 0);
-
   late locater.PermissionStatus _permissionGranted;
   locater.LocationData? userLocation;
   late bool _serviceEnabled;
 
-  void mapCreated(controller) {
-    setState(() {
-      _controller = controller;
+  updateDriverProfile() async {
+    final docRef = await FirebaseFirestore.instance
+        .collection("users")
+        .where('userid', isEqualTo: AuthenticationHelper().userid.trim())
+        .get();
+
+    final docRef2 = FirebaseFirestore.instance
+        .collection("users")
+        .doc(AuthenticationHelper().userid.trim())
+        .collection('requests');
+
+    docRef2.add({
+      'address': '',
+      'date': DateTime.now(),
+      'price': '',
+      'requestId': '',
+      'requestby': '',
+      'status': 'declined',
+      'vehicles': '',
     });
-  }
 
-  late GoogleMapController _controller;
-
-  selectTime(BuildContext context) async {
-    final TimeOfDay? timeOfDay = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      initialEntryMode: TimePickerEntryMode.dial,
-    );
-    if (timeOfDay != null && timeOfDay != TimeOfDay.now()) {
-      return timeOfDay;
-    }
+    await docRef.docs.first.reference.update({
+      'vehicleNos': '1',
+      'charge': '45',
+      'activeStatus': false,
+      'phone': '',
+      'earnings': '0.00',
+      'weeklyEarnings': '0.00',
+      'monthlyEarnings': '0.00',
+      'yearlyEarnings': '0.00',
+      'availability': [
+        {
+          'day': 'Mon',
+          'available': false,
+          'open': '00:00am',
+          'close': '00:00pm'
+        },
+        {
+          'day': 'Tue',
+          'available': false,
+          'open': '00:00am',
+          'close': '00:00pm'
+        },
+        {
+          'day': 'Wed',
+          'available': false,
+          'open': '00:00am',
+          'close': '00:00pm'
+        },
+        {
+          'day': 'Thu',
+          'available': false,
+          'open': '00:00am',
+          'close': '00:00pm'
+        },
+        {
+          'day': 'Fri',
+          'available': false,
+          'open': '00:00am',
+          'close': '00:00pm'
+        },
+        {
+          'day': 'Sat',
+          'available': false,
+          'open': '00:00am',
+          'close': '00:00pm'
+        },
+        {
+          'day': 'Sun',
+          'available': false,
+          'open': '00:00am',
+          'close': '00:00pm'
+        }
+      ]
+    });
   }
 
   Future<void> getUserLocation() async {
@@ -72,16 +126,198 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
   }
 
   @override
+  void initState() {
+    updateDriverProfile();
+    getUserLocation();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: userLocation == null
+          ? Container()
+          : DriverProfileaddStepOne(
+              userLocation:
+                  LatLng(userLocation!.latitude!, userLocation!.longitude!),
+            ),
+    );
+  }
+}
+
+class DriverProfileaddStepOne extends StatefulWidget {
+  const DriverProfileaddStepOne({super.key, required this.userLocation});
+  final LatLng userLocation;
+
+  @override
+  State<DriverProfileaddStepOne> createState() =>
+      _DriverProfileaddStepOneState();
+}
+
+class _DriverProfileaddStepOneState extends State<DriverProfileaddStepOne> {
+  bool istoggled = false;
+  final _streetnocontroller = TextEditingController();
+
+  String googleApikey = "AIzaSyAmQ9UeFrn_LxD4SzDSYlCHcVIj0V2qbt0";
+  String startLocation = "Search your location";
+  List<Marker> allMarkers = [];
+  LatLng selectedLocation = const LatLng(0, 0);
+  late GoogleMapController _controller;
+  bool appisLoading = false;
+  void mapCreated(controller) {
+    setState(() {
+      _controller = controller;
+    });
+  }
+
+  selectTime(BuildContext context) async {
+    final TimeOfDay? timeOfDay = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.dial,
+    );
+    if (timeOfDay != null && timeOfDay != TimeOfDay.now()) {
+      return timeOfDay;
+    } else {
+      return '';
+    }
+  }
+
+  Future<void> navigateAndDisplaySelection(
+      BuildContext context, String where) async {
+    final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SearchLocation(),
+        ));
+
+    if (!mounted) return;
+
+    if (result == 'mylocation') {
+      await getAddressFromLocation();
+    } else {
+      setState(() {
+        startLocation = result;
+      });
+      getLocationFromAdress(
+        result,
+      );
+    }
+  }
+
+  Future getLocationFromAdress(
+    address,
+  ) async {
+    var googleGeocoding =
+        GoogleGeocoding("AIzaSyAmQ9UeFrn_LxD4SzDSYlCHcVIj0V2qbt0");
+    var result = await googleGeocoding.geocoding.get(address, []);
+
+    setState(() {
+      selectedLocation = LatLng(
+          (result!.results!.first.geometry!.location!.lat)!.toDouble(),
+          (result.results!.first.geometry!.location!.lng)!.toDouble());
+      allMarkers.add(Marker(
+          markerId: MarkerId(selectedLocation.latitude.toString()),
+          draggable: false,
+          infoWindow:
+              const InfoWindow(title: 'My Location', snippet: 'My Location'),
+          position:
+              LatLng(selectedLocation.latitude, selectedLocation.longitude)));
+    });
+
+    _controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+        target: selectedLocation, zoom: 14.0, bearing: 45.0, tilt: 45.0)));
+  }
+
+  Future getAddressFromLocation() async {
+    var googleGeocoding =
+        GoogleGeocoding("AIzaSyAmQ9UeFrn_LxD4SzDSYlCHcVIj0V2qbt0");
+    var addresses = await googleGeocoding.geocoding.getReverse(LatLon(
+      widget.userLocation.latitude.toDouble(),
+      widget.userLocation.longitude.toDouble(),
+    ));
+
+    setState(() {
+      selectedLocation = LatLng(
+        widget.userLocation.latitude.toDouble(),
+        widget.userLocation.longitude.toDouble(),
+      );
+      startLocation = addresses!
+          .results!.first.addressComponents!.first.longName
+          .toString();
+    });
+  }
+
+  @override
+  void initState() {
+    allMarkers.add(Marker(
+        markerId: MarkerId(widget.userLocation.latitude.toString()),
+        draggable: false,
+        infoWindow:
+            const InfoWindow(title: 'My Location', snippet: 'My Location'),
+        position: LatLng(
+            widget.userLocation.latitude, widget.userLocation.longitude)));
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.only(bottom: 10.0, left: 40, right: 40),
           child: InkWell(
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const DriverHomePage()));
+            onTap: () async {
+              if (_streetnocontroller.text.isEmpty) {
+                // ignore: use_build_context_synchronously
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text(
+                    "Provide your vehicle type",
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontFamily: 'PublicSans',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14),
+                  )),
+                );
+              } else if (selectedLocation == const LatLng(0, 0)) {
+                // ignore: use_build_context_synchronously
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text(
+                    "Serach and select specific location",
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontFamily: 'PublicSans',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14),
+                  )),
+                );
+              } else {
+                setState(() {
+                  appisLoading = true;
+                });
+                final docRef = await FirebaseFirestore.instance
+                    .collection("users")
+                    .where('userid',
+                        isEqualTo: AuthenticationHelper().userid.trim())
+                    .get();
+
+                await docRef.docs.first.reference.update({
+                  'vehicleType': _streetnocontroller.text,
+                  'addressLocation': startLocation,
+                  'latitudeLocation': selectedLocation.latitude,
+                  'longitudeLocation': selectedLocation.longitude
+                });
+                setState(() {
+                  appisLoading = false;
+                });
+                // ignore: use_build_context_synchronously
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DriverHomePage()));
+              }
             },
             child: Container(
               height: MediaQuery.of(context).size.height * 0.0615763,
@@ -93,15 +329,25 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
                     Color(0xFF7CD956),
                     Color(0xFF3EA334),
                   ])),
-              child: const Center(
-                child: Text(
-                  'Continue',
-                  style: TextStyle(
-                      color: Color(0xFFFFFFFF),
-                      fontFamily: 'PublicSans',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16),
-                ),
+              child: Center(
+                child: appisLoading == true
+                    ? const Center(
+                        child: SizedBox(
+                          height: 15,
+                          width: 15,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Text(
+                        'Continue',
+                        style: TextStyle(
+                            color: Color(0xFFFFFFFF),
+                            fontFamily: 'PublicSans',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16),
+                      ),
               ),
             ),
           ),
@@ -193,7 +439,9 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
                   child: InkWell(
-                    onTap: () async {},
+                    onTap: () async {
+                      navigateAndDisplaySelection(context, 'start');
+                    },
                     child: Container(
                       height: MediaQuery.of(context).size.height * 0.0591133,
                       width: MediaQuery.of(context).size.width *
@@ -256,9 +504,10 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
                         bottomRight: Radius.circular(7.0),
                       ),
                       child: GoogleMap(
+                        markers: Set.from(allMarkers),
                         mapType: MapType.normal,
-                        initialCameraPosition: const CameraPosition(
-                          target: LatLng(23.44, 23.0),
+                        initialCameraPosition: CameraPosition(
+                          target: widget.userLocation,
                           zoom: 14.4746,
                         ),
                         onMapCreated: mapCreated,
@@ -321,97 +570,245 @@ class _DriverProfileaddState extends State<DriverProfileadd> {
                       color: const Color(0xFFC8C8C8),
                       width: MediaQuery.of(context).size.width),
                 ),
-                Column(
-                    children: allDayes
-                        .map(
-                          (e) => Padding(
-                            padding:
-                                const EdgeInsets.only(left: 35.0, bottom: 6),
-                            child: Row(
-                              children: [
-                                Container(
-                                  color: Colors.transparent,
-                                  width: MediaQuery.of(context).size.width *
-                                      0.12467,
-                                  child: Text(e.dayname,
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'PublicSans',
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16)),
-                                ),
-                                Container(
-                                  width: MediaQuery.of(context).size.width *
-                                      0.19467,
-                                  color: Colors.transparent,
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Transform.scale(
-                                      scale: 0.7,
-                                      child: CupertinoSwitch(
-                                        onChanged: (value) {
-                                          setState(() {
-                                            e.active = !e.active;
-                                          });
-                                        },
-                                        value: e.active,
-                                      ),
+                StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .where('userid',
+                            isEqualTo: AuthenticationHelper().userid.trim())
+                        .snapshots(),
+                    builder: (context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData) {
+                        List allItems = [];
+                        for (var item
+                            in snapshot.data!.docs.first['availability']) {
+                          allItems.add(item);
+                        }
+                        return Column(
+                            children: snapshot.data!.docs.first['availability']
+                                .map<Widget>(
+                                  (e) => Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 35.0, bottom: 6),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          color: Colors.transparent,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.12467,
+                                          child: Text(e['day'],
+                                              style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontFamily: 'PublicSans',
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16)),
+                                        ),
+                                        Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.19467,
+                                          color: Colors.transparent,
+                                          child: Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Transform.scale(
+                                              scale: 0.7,
+                                              child: CupertinoSwitch(
+                                                onChanged: (value) async {
+                                                  int index = allItems
+                                                      .indexWhere((element) =>
+                                                          element['day'] ==
+                                                          e['day']);
+
+                                                  allItems.removeWhere(
+                                                      (element) =>
+                                                          element['day'] ==
+                                                          e['day']);
+
+                                                  allItems.insert(index, {
+                                                    'day': e['day'],
+                                                    'available':
+                                                        !e['available'],
+                                                    'open': e['open'],
+                                                    'close': e['close']
+                                                  });
+
+                                                  final docRef =
+                                                      await FirebaseFirestore
+                                                          .instance
+                                                          .collection("users")
+                                                          .where('userid',
+                                                              isEqualTo:
+                                                                  AuthenticationHelper()
+                                                                      .userid
+                                                                      .trim())
+                                                          .get();
+
+                                                  await docRef
+                                                      .docs.first.reference
+                                                      .update({
+                                                    'availability': allItems
+                                                  });
+                                                },
+                                                value: e['available'],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.010492610,
+                                        ),
+                                        InkWell(
+                                          onTap: () async {
+                                            var response =
+                                                await selectTime(context);
+
+                                            if (response == '') {
+                                            } else {
+                                              int index = allItems.indexWhere(
+                                                  (element) =>
+                                                      element['day'] ==
+                                                      e['day']);
+
+                                              allItems.removeWhere((element) =>
+                                                  element['day'] == e['day']);
+
+                                              allItems.insert(index, {
+                                                'day': e['day'],
+                                                'available': e['available'],
+                                                'open':
+                                                    '${(response.hour.toString().length == 1) ? '0${response.hour.toString()}' : response.hour.toString()}:${(response.minute.toString().length == 1) ? '0${response.minute.toString()}' : response.minute.toString()}  ${(response.hour > 12) ? 'am' : 'pm'}',
+                                                'close': e['close']
+                                              });
+
+                                              final docRef = await FirebaseFirestore
+                                                  .instance
+                                                  .collection("users")
+                                                  .where('userid',
+                                                      isEqualTo:
+                                                          AuthenticationHelper()
+                                                              .userid
+                                                              .trim())
+                                                  .get();
+
+                                              await docRef.docs.first.reference
+                                                  .update({
+                                                'availability': allItems
+                                              });
+
+                                              allItems = [];
+                                            }
+                                          },
+                                          child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                                color: const Color(0xFFEFEFEF),
+                                              ),
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height *
+                                                  0.050492610,
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.2133333333,
+                                              child: Center(
+                                                child: Text(e['open'],
+                                                    style: const TextStyle(
+                                                        color:
+                                                            Color(0xFFFF0000),
+                                                        fontFamily:
+                                                            'PublicSans',
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 16)),
+                                              )),
+                                        ),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.0500666,
+                                        ),
+                                        InkWell(
+                                          onTap: () async {
+                                            var response =
+                                                await selectTime(context);
+
+                                            if (response == '') {
+                                            } else {
+                                              int index = allItems.indexWhere(
+                                                  (element) =>
+                                                      element['day'] ==
+                                                      e['day']);
+
+                                              allItems.removeWhere((element) =>
+                                                  element['day'] == e['day']);
+
+                                              allItems.insert(index, {
+                                                'day': e['day'],
+                                                'available': e['available'],
+                                                'close':
+                                                    '${(response.hour.toString().length == 1) ? '0${response.hour.toString()}' : response.hour.toString()}:${(response.minute.toString().length == 1) ? '0${response.minute.toString()}' : response.minute.toString()}  ${(response.hour > 12) ? 'am' : 'pm'}',
+                                                'open': e['open']
+                                              });
+
+                                              final docRef = await FirebaseFirestore
+                                                  .instance
+                                                  .collection("users")
+                                                  .where('userid',
+                                                      isEqualTo:
+                                                          AuthenticationHelper()
+                                                              .userid
+                                                              .trim())
+                                                  .get();
+
+                                              await docRef.docs.first.reference
+                                                  .update({
+                                                'availability': allItems
+                                              });
+                                            }
+                                          },
+                                          child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                                color: const Color(0xFFEFEFEF),
+                                              ),
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height *
+                                                  0.050492610,
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.2133333333,
+                                              child: Center(
+                                                child: Text(e['close'],
+                                                    style: const TextStyle(
+                                                        color:
+                                                            Color(0xFFFF0000),
+                                                        fontFamily:
+                                                            'PublicSans',
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 16)),
+                                              )),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: MediaQuery.of(context).size.width *
-                                      0.010492610,
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    selectTime(context);
-                                  },
-                                  child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(5),
-                                        color: const Color(0xFFEFEFEF),
-                                      ),
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.050492610,
-                                      width: MediaQuery.of(context).size.width *
-                                          0.2133333333,
-                                      child: Center(
-                                        child: Text(e.openTime,
-                                            style: const TextStyle(
-                                                color: Color(0xFFFF0000),
-                                                fontFamily: 'PublicSans',
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 16)),
-                                      )),
-                                ),
-                                SizedBox(
-                                  width: MediaQuery.of(context).size.width *
-                                      0.0500666,
-                                ),
-                                Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(5),
-                                      color: const Color(0xFFEFEFEF),
-                                    ),
-                                    height: MediaQuery.of(context).size.height *
-                                        0.050492610,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.2133333333,
-                                    child: Center(
-                                      child: Text(e.closeTime,
-                                          style: const TextStyle(
-                                              color: Color(0xFFFF0000),
-                                              fontFamily: 'PublicSans',
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 16)),
-                                    )),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList())
+                                )
+                                .toList());
+                      } else {
+                        return Container();
+                      }
+                    })
               ]),
             ],
           ),

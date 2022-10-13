@@ -74,7 +74,8 @@ class _SuccessfulOrderState extends State<SuccessfulOrder> {
       'items': allItems,
       'address': widget.address,
       'payment': 'unpaid',
-      'status': 'pending'
+      'status': 'pending',
+      'type': 'user'
     });
 
     docRef3.add({

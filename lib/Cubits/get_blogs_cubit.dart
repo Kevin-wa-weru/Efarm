@@ -25,6 +25,7 @@ class GetBlogsCubit extends Cubit<GetBlogsState> {
 
       emit(GetBlogsState.loaded(allBlogs));
       print(allBlogs);
+      allBlogs = [];
     });
   }
 }

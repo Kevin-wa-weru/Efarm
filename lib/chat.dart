@@ -5,7 +5,6 @@ import 'package:eshamba/models/data.dart';
 import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Chat extends StatefulWidget {
@@ -27,7 +26,7 @@ class _ChatState extends State<Chat> {
           children: [
             const Center(
               child: Text(
-                'Chat',
+                'Chats',
                 style: TextStyle(
                     color: Color(0xFF000000),
                     fontFamily: 'PublicSans',
@@ -47,23 +46,61 @@ class _ChatState extends State<Chat> {
                         .snapshots(),
                     builder: (context, AsyncSnapshot snapshot) {
                       if (snapshot.hasData) {
-                        return ListView.builder(
-                          scrollDirection: Axis.vertical,
-                          itemCount: snapshot.data!.docs.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return SingleChat(
-                              avatarUrl: snapshot.data!.docs[index]
-                                  ['avatarUrl'],
-                              message: snapshot.data!.docs[index]['message'],
-                              name: snapshot.data!.docs[index]['name'],
-                              time: DateTime.parse(snapshot
-                                  .data!.docs[index]['time']
-                                  .toDate()
-                                  .toString()),
-                              userId: snapshot.data!.docs[index]['id'],
-                            );
-                          },
-                        );
+                        if (snapshot.data.docs.isEmpty) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 70.0),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.3275862,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.70933,
+                                    color: Colors.transparent,
+                                    child: Image.asset(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.3275862,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.70933,
+                                        'assets/images/emptyChat.gif'),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 15.0),
+                                    child: Text(
+                                      'No messages yet',
+                                      style: TextStyle(
+                                          color: Colors.black38,
+                                          fontFamily: 'PublicSans',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        } else {
+                          return ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            itemCount: snapshot.data!.docs.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return SingleChat(
+                                avatarUrl: snapshot.data!.docs[index]
+                                    ['avatarUrl'],
+                                message: snapshot.data!.docs[index]['message'],
+                                name: snapshot.data!.docs[index]['name'],
+                                time: DateTime.parse(snapshot
+                                    .data!.docs[index]['time']
+                                    .toDate()
+                                    .toString()),
+                                userId: snapshot.data!.docs[index]['id'],
+                              );
+                            },
+                          );
+                        }
                       } else {
                         return Column(
                             children: cateogry
@@ -112,13 +149,29 @@ class SingleChat extends StatelessWidget {
         },
         child: Row(
           children: [
-            Hero(
-              tag: avatarUrl,
-              child: CircleAvatar(
-                radius: MediaQuery.of(context).size.height * 0.023251231,
-                backgroundImage: NetworkImage(avatarUrl),
-              ),
-            ),
+            avatarUrl == ''
+                ? Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: const Color(0xFFE8E8E8),
+                    ),
+                    child: Center(
+                      child: SizedBox(
+                        height:
+                            MediaQuery.of(context).size.height * 0.0147783251,
+                        width: MediaQuery.of(context).size.width * 0.03,
+                        child: SvgPicture.asset('assets/icons/user.svg',
+                            color: Colors.black12, fit: BoxFit.contain),
+                      ),
+                    ),
+                  )
+                : CircleAvatar(
+                    backgroundColor: const Color(0xFFF4F4F4),
+                    radius: MediaQuery.of(context).size.height * 0.023251231,
+                    backgroundImage: NetworkImage(avatarUrl),
+                  ),
             Padding(
               padding: const EdgeInsets.only(left: 15.0),
               child: Column(

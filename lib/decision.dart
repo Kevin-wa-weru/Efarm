@@ -1,7 +1,7 @@
 import 'package:eshamba/homepage.dart';
 import 'package:eshamba/onboarding.dart';
 import 'package:eshamba/screens/driver/driver_homePage.dart';
-import 'package:eshamba/vendor.dart';
+import 'package:eshamba/vendorpage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,11 +23,15 @@ class _DecisionState extends State<Decision> {
     }
 
     if (user == 'Vendor') {
-      return const Vendor();
+      // return const Vendor();
+
+      return const Vendorprofile();
     }
 
     if (user == 'driver') {
       return const DriverHomePage();
+
+      // return const DriverProfileadd();
     }
     return const Onboarding();
   }

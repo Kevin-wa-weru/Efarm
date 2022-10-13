@@ -1,6 +1,7 @@
 import 'package:eshamba/Cubits/get_blogs_cubit.dart';
 import 'package:eshamba/Cubits/get_farms_cubit.dart';
 import 'package:eshamba/Cubits/get_messaged_user_cubit.dart';
+import 'package:eshamba/Cubits/get_nearest_drivers_cubit.dart';
 import 'package:eshamba/Cubits/get_posted_products_cubit.dart';
 import 'package:eshamba/decision.dart';
 import 'package:eshamba/onboarding.dart';
@@ -46,6 +47,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (contex) => GetMessagedUserCubit(),
+        ),
+        BlocProvider(
+          create: (contex) => GetNearestDriversCubit(),
         ),
       ],
       child: MaterialApp(
