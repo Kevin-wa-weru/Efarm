@@ -1,5 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:eshamba/show_off_workplace.dart';
-import 'package:eshamba/show_off_workplace_two.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
@@ -15,26 +16,58 @@ class _WorkingHoursState extends State<WorkingHours> {
   bool istoggled = false;
 
   String isdata = '';
-
+  bool appisLoading = false;
   DateTime dateTimeOne = DateTime.now();
   DateTime dateTimeTwo = DateTime.now();
+
+  bool changedOne = false;
+  bool changedTwo = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: InkWell(
-        onTap: () {
-          if (dateTimeOne == DateTime.now() || dateTimeTwo == DateTime.now()) {
+        onTap: () async {
+          if (changedOne == false) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                   content: Text(
-                "Complete Filling The time",
+                "Select the opening time",
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              )),
+            );
+          } else if (changedTwo == false) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                "Select the closing time",
                 style: TextStyle(
                   color: Colors.red,
                 ),
               )),
             );
           } else {
+            setState(() {
+              appisLoading = true;
+            });
+            final docRef = FirebaseFirestore.instance
+                .collection("users")
+                .doc(AuthenticationHelper().userid.trim());
+
+            await docRef.update({
+              'workingHours': {
+                'openStatus': istoggled,
+                'openTime': '${dateTimeOne.hour}:${dateTimeOne.minute}',
+                'closingTime': '${dateTimeTwo.hour}:${dateTimeTwo.minute}',
+              }
+            });
+
+            setState(() {
+              appisLoading = false;
+            });
+            // ignore: use_build_context_synchronously
             Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -53,16 +86,26 @@ class _WorkingHoursState extends State<WorkingHours> {
                   Color(0xFF7CD956),
                   Color(0xFF3EA334),
                 ])),
-            child: const Center(
-              child: Text(
-                'Continue',
-                style: TextStyle(
-                    color: Color(0xFFFFFFFF),
-                    fontFamily: 'PublicSans',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16),
-              ),
-            ),
+            child: appisLoading == true
+                ? const Center(
+                    child: SizedBox(
+                      height: 15,
+                      width: 15,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : const Center(
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontFamily: 'PublicSans',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16),
+                    ),
+                  ),
           ),
         ),
       ),
@@ -167,7 +210,7 @@ class _WorkingHoursState extends State<WorkingHours> {
                     height: MediaQuery.of(context).size.height * 0.06527093,
                     width: MediaQuery.of(context).size.width * 0.434666666,
                     child: TimePickerSpinner(
-                      is24HourMode: false,
+                      is24HourMode: true,
                       normalTextStyle: const TextStyle(
                           color: Color(0xFF39B54A),
                           fontFamily: 'PublicSans',
@@ -183,6 +226,8 @@ class _WorkingHoursState extends State<WorkingHours> {
                       isForce2Digits: true,
                       onTimeChange: (time) {
                         setState(() {
+                          changedOne = true;
+                          print(dateTimeOne);
                           dateTimeOne = time;
                         });
                       },
@@ -196,7 +241,7 @@ class _WorkingHoursState extends State<WorkingHours> {
                   height: MediaQuery.of(context).size.height * 0.06527093,
                   width: MediaQuery.of(context).size.width * 0.434666666,
                   child: TimePickerSpinner(
-                    is24HourMode: false,
+                    is24HourMode: true,
                     normalTextStyle: const TextStyle(
                         color: Color(0xFF39B54A),
                         fontFamily: 'PublicSans',
@@ -211,8 +256,10 @@ class _WorkingHoursState extends State<WorkingHours> {
                     itemHeight: 80,
                     isForce2Digits: true,
                     onTimeChange: (time) {
+                      print(dateTimeTwo);
                       setState(() {
-                        dateTimeOne = time;
+                        changedTwo = true;
+                        dateTimeTwo = time;
                       });
                     },
                   )),

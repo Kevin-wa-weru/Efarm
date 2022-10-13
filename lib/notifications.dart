@@ -14,43 +14,49 @@ class _NotificationsState extends State<Notifications> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: false,
+        title: Row(
+          children: [
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.053333333,
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                height: 60,
+                width: 60,
+                color: Colors.transparent,
+                child: const Icon(
+                  Icons.arrow_back_ios,
+                  color: Colors.black,
+                  size: 20,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.15,
+            ),
+            const Text(
+              'Notifications',
+              style: TextStyle(
+                  color: Color(0xFF000000),
+                  fontFamily: 'PublicSans',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
       backgroundColor: Colors.white,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark
             .copyWith(statusBarColor: Colors.transparent),
         child: Column(
           children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.width * 0.128,
-            ),
-            Row(
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.053333333,
-                ),
-                InkWell(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(
-                    Icons.arrow_back_ios,
-                    size: 20,
-                  ),
-                ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.268,
-                ),
-                const Text(
-                  'Notifications',
-                  style: TextStyle(
-                      color: Color(0xFF000000),
-                      fontFamily: 'PublicSans',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18),
-                ),
-              ],
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.003251,
-            ),
             Expanded(
               child: StreamBuilder(
                   stream: FirebaseFirestore.instance
@@ -60,23 +66,60 @@ class _NotificationsState extends State<Notifications> {
                       .snapshots(),
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: ListView.builder(
-                          scrollDirection: Axis.vertical,
-                          itemCount: snapshot.data!.docs.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return SingleNotification(
-                              body: snapshot.data.docs[index]['body'],
-                              date: DateTime.parse(snapshot
-                                  .data.docs[index]['date']
-                                  .toDate()
-                                  .toString()),
-                              title: snapshot.data.docs[index]['title'],
-                            );
-                          },
-                        ),
-                      );
+                      if (snapshot.data.docs.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 70.0),
+                            child: Column(
+                              children: [
+                                Container(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.3275862,
+                                  width: MediaQuery.of(context).size.width *
+                                      0.70933,
+                                  color: Colors.transparent,
+                                  child: Image.asset(
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.3275862,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.70933,
+                                      'assets/images/Notify.gif'),
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 15.0),
+                                  child: Text(
+                                    'It is empty here',
+                                    style: TextStyle(
+                                        color: Colors.black38,
+                                        fontFamily: 'PublicSans',
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      } else {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            itemCount: snapshot.data!.docs.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return SingleNotification(
+                                body: snapshot.data.docs[index]['body'],
+                                date: DateTime.parse(snapshot
+                                    .data.docs[index]['date']
+                                    .toDate()
+                                    .toString()),
+                                title: snapshot.data.docs[index]['title'],
+                              );
+                            },
+                          ),
+                        );
+                      }
                     } else {
                       return Container();
                     }

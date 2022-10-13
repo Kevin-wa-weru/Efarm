@@ -1,3 +1,4 @@
+import 'package:eshamba/quick_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -96,50 +97,66 @@ class _DetailedFarmState extends State<DetailedFarm> {
                               Padding(
                                 padding: const EdgeInsets.only(
                                     top: 10.0, right: 15.0),
-                                child: Container(
-                                  height: MediaQuery.of(context).size.height *
-                                      0.028460591,
-                                  width: MediaQuery.of(context).size.width *
-                                      0.15733333,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      gradient: const LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          colors: [
-                                            Color(0xFF7CD956),
-                                            Color(0xFF3EA334),
-                                          ])),
-                                  child: Center(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Text(
-                                          'Chat',
-                                          style: TextStyle(
-                                              color: Color(0xFFFFFFFF),
-                                              fontFamily: 'PublicSans',
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 8),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 8.0, top: 2),
-                                          child: SizedBox(
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.030480295,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.02432266,
-                                            child: SvgPicture.asset(
-                                                'assets/icons/chat2.svg',
-                                                fit: BoxFit.contain),
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                QuickChatDetails(
+                                                  name: widget
+                                                      .farm['postedByName'],
+                                                  userID:
+                                                      widget.farm['postedById'],
+                                                  avatarUrl: widget.farm[
+                                                      'postedByAvatarUrl'],
+                                                )));
+                                  },
+                                  child: Container(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.028460591,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.15733333,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        gradient: const LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            colors: [
+                                              Color(0xFF7CD956),
+                                              Color(0xFF3EA334),
+                                            ])),
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Text(
+                                            'Chat',
+                                            style: TextStyle(
+                                                color: Color(0xFFFFFFFF),
+                                                fontFamily: 'PublicSans',
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 8),
                                           ),
-                                        ),
-                                      ],
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 8.0, top: 2),
+                                            child: SizedBox(
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height *
+                                                  0.030480295,
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.02432266,
+                                              child: SvgPicture.asset(
+                                                  'assets/icons/chat2.svg',
+                                                  fit: BoxFit.contain),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),

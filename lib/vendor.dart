@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eshamba/map_location.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,11 +16,13 @@ class _VendorState extends State<Vendor> {
   final roomController = TextEditingController();
   final cityController = TextEditingController();
   final postalCodeController = TextEditingController();
+
+  bool appisLoaading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: InkWell(
-        onTap: () {
+        onTap: () async {
           if (streetController.text.isEmpty ||
               roomController.text.isEmpty ||
               cityController.text.isEmpty ||
@@ -28,11 +32,33 @@ class _VendorState extends State<Vendor> {
                   content: Text(
                 "Complete Filling The Form",
                 style: TextStyle(
-                  color: Colors.red,
-                ),
+                    color: Colors.red,
+                    fontFamily: 'PublicSans',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16),
               )),
             );
           } else {
+            setState(() {
+              appisLoaading = true;
+            });
+            final docRef = FirebaseFirestore.instance
+                .collection("users")
+                .doc(AuthenticationHelper().userid.trim());
+
+            await docRef.update({
+              'physicalAddress': {
+                'street': streetController.text,
+                'apartment': roomController.text,
+                'city': cityController.text,
+                'postalCode': postalCodeController.text,
+              }
+            });
+
+            setState(() {
+              appisLoaading = false;
+            });
+            // ignore: use_build_context_synchronously
             Navigator.push(context,
                 MaterialPageRoute(builder: (context) => const MapLocation()));
           }
@@ -49,16 +75,26 @@ class _VendorState extends State<Vendor> {
                   Color(0xFF7CD956),
                   Color(0xFF3EA334),
                 ])),
-            child: const Center(
-              child: Text(
-                'Continue',
-                style: TextStyle(
-                    color: Color(0xFFFFFFFF),
-                    fontFamily: 'PublicSans',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16),
-              ),
-            ),
+            child: appisLoaading == true
+                ? const Center(
+                    child: SizedBox(
+                      height: 15,
+                      width: 15,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : const Center(
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontFamily: 'PublicSans',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16),
+                    ),
+                  ),
           ),
         ),
       ),

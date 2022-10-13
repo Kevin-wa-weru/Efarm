@@ -17,6 +17,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -32,6 +33,18 @@ class _ProfileState extends State<Profile> {
   late String email;
   late String password;
   late String name;
+
+  late String user = '';
+
+  getUserType() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String? stringValue = prefs.getString('stringValue');
+    print(stringValue);
+
+    setState(() {});
+    user = stringValue!;
+  }
 
   Future<String> getCountry() async {
     Network n = Network("http://ip-api.com/json");
@@ -52,6 +65,7 @@ class _ProfileState extends State<Profile> {
   @override
   void initState() {
     getCountry();
+    getUserType();
     super.initState();
   }
 
@@ -92,7 +106,7 @@ class _ProfileState extends State<Profile> {
                                   borderRadius: BorderRadius.only(
                                     bottomRight: Radius.circular(100.0),
                                   ),
-                                  color: Colors.red,
+                                  color: Colors.transparent,
                                 ),
                                 child: FittedBox(
                                   fit: BoxFit.fill,
@@ -771,8 +785,9 @@ class _ProfileState extends State<Profile> {
                                 Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) =>
-                                            const Onboarding()));
+                                        builder: (context) => Login(
+                                              usertype: user,
+                                            )));
                                 AuthenticationHelper().signOut();
                               },
                               child: Container(

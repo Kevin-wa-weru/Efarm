@@ -23,6 +23,12 @@ class _ChatDetailsState extends State<ChatDetails> {
   final chatController = TextEditingController();
 
   @override
+  void initState() {
+    print(widget.userID);
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -50,13 +56,33 @@ class _ChatDetailsState extends State<ChatDetails> {
                   padding: const EdgeInsets.only(left: 20.0),
                   child: Row(
                     children: [
-                      Hero(
-                        tag: widget.avatarUrl,
-                        child: CircleAvatar(
-                          radius:
-                              MediaQuery.of(context).size.height * 0.023251231,
-                          backgroundImage: NetworkImage(widget.avatarUrl),
-                        ),
+                      Container(
+                        child: widget.avatarUrl == ''
+                            ? Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  color: const Color(0xFFE8E8E8),
+                                ),
+                                child: Center(
+                                  child: SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.0147783251,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.03,
+                                    child: SvgPicture.asset(
+                                        'assets/icons/user.svg',
+                                        color: Colors.black12,
+                                        fit: BoxFit.contain),
+                                  ),
+                                ),
+                              )
+                            : CircleAvatar(
+                                radius: MediaQuery.of(context).size.height *
+                                    0.023251231,
+                                backgroundImage: NetworkImage(widget.avatarUrl),
+                              ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0),

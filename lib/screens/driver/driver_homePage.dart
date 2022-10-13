@@ -1,8 +1,12 @@
 import 'package:eshamba/chat.dart';
-import 'package:eshamba/models/data.dart';
+import 'package:eshamba/driver_order_details.dart';
+import 'package:eshamba/driverprofile.dart';
+import 'package:eshamba/quick_chat.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DriverHomePage extends StatefulWidget {
   const DriverHomePage({Key? key}) : super(key: key);
@@ -172,13 +176,58 @@ class _DriverHomePageState extends State<DriverHomePage> {
         centerTitle: true,
         actions: [
           InkWell(
-            onTap: () {},
-            child: const Padding(
-              padding: EdgeInsets.only(right: 30.0),
-              child: CircleAvatar(
-                radius: 15,
-                backgroundImage: AssetImage('assets/images/woman.jpg'),
-              ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const DriverProfile()));
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(right: 30.0),
+              child: StreamBuilder<Object>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .where('userid',
+                          isEqualTo: AuthenticationHelper().userid.trim())
+                      .snapshots(),
+                  builder: (context, AsyncSnapshot snapshot) {
+                    if (snapshot.hasData) {
+                      return Container(
+                        child: snapshot.data.docs.first['avatarUrl'] == ''
+                            ? Center(
+                                child: Container(
+                                  height: 40,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(100),
+                                    color: const Color(0xFFE8E8E8),
+                                  ),
+                                  child: Center(
+                                    child: SizedBox(
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.0147783251,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.04,
+                                      child: SvgPicture.asset(
+                                          'assets/icons/user.svg',
+                                          color: Colors.black12,
+                                          fit: BoxFit.contain),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : CircleAvatar(
+                                backgroundColor: const Color(0xFFF4F4F4),
+                                radius: 15,
+                                backgroundImage: NetworkImage(
+                                    snapshot.data.docs.first['avatarUrl']),
+                              ),
+                      );
+                    } else {
+                      return Container();
+                    }
+                  }),
             ),
           ),
         ],
@@ -197,11 +246,78 @@ class _DriverHomePageState extends State<DriverHomePage> {
                       const SizedBox(
                         height: 20,
                       ),
-                      Column(
-                        children: cateogry
-                            .map((e) => const SingleDeliveryRequest())
-                            .toList(),
-                      )
+                      StreamBuilder<Object>(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(AuthenticationHelper().userid.trim())
+                              .collection('requests')
+                              .where('status', isEqualTo: 'none')
+                              .snapshots(),
+                          builder: (context, AsyncSnapshot snapshot) {
+                            if (snapshot.hasData) {
+                              if (snapshot.data.docs.isEmpty) {
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 70.0),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.3275862,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.70933,
+                                          color: Colors.transparent,
+                                          child: Image.asset(
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height *
+                                                  0.3275862,
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.70933,
+                                              'assets/images/car.gif'),
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.only(top: 15.0),
+                                          child: Text(
+                                            'No delivery requests yet',
+                                            style: TextStyle(
+                                                color: Colors.black38,
+                                                fontFamily: 'PublicSans',
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return Column(
+                                  children: snapshot.data!.docs
+                                      .map<Widget>((e) => SingleDeliveryRequest(
+                                            address: e['address'],
+                                            date:
+                                                '${DateTime.parse(e['date'].toDate().toString()).day}/${DateTime.parse(e['date'].toDate().toString()).month}/${DateTime.parse(e['date'].toDate().toString()).year},',
+                                            image: e['requestby']['avatarUrl'],
+                                            price: e['price'],
+                                            name: e['requestby']['name'],
+                                            vehicles: e['vehicles'],
+                                            docid: e.reference.id,
+                                            requestId: e['requestId'],
+                                          ))
+                                      .toList(),
+                                );
+                              }
+                            } else {
+                              return Container();
+                            }
+                          })
                     ],
                   )
                 ],
@@ -212,10 +328,76 @@ class _DriverHomePageState extends State<DriverHomePage> {
                   const SizedBox(
                     height: 20,
                   ),
-                  Column(
-                      children: cateogry
-                          .map((e) => const SinglePastOrderForDriver())
-                          .toList()),
+                  StreamBuilder<Object>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(AuthenticationHelper().userid.trim())
+                          .collection('orders')
+                          .where('type', isEqualTo: 'driver')
+                          .snapshots(),
+                      builder: (context, AsyncSnapshot snapshot) {
+                        if (snapshot.hasData) {
+                          if (snapshot.data.docs.isEmpty) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 70.0),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.3275862,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.70933,
+                                      color: Colors.transparent,
+                                      child: Image.asset(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.3275862,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.70933,
+                                          'assets/images/Empty.gif'),
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 15.0),
+                                      child: Text(
+                                        'No Orders yet',
+                                        style: TextStyle(
+                                            color: Colors.black38,
+                                            fontFamily: 'PublicSans',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          } else {
+                            return Column(
+                                children: snapshot.data.docs
+                                    .map<Widget>((e) =>
+                                        SinglePastOrderForDriver(
+                                          address: e['address'],
+                                          items: e['items'],
+                                          ordernote: e['ordernote'],
+                                          payment: e['payment'],
+                                          shippingfee: e['shippingfee'],
+                                          status: e['status'],
+                                          total: e['total'],
+                                          date: DateTime.parse(
+                                              e['date'].toDate().toString()),
+                                          refernce: e.reference.id,
+                                        ))
+                                    .toList());
+                          }
+                        } else {
+                          return Container();
+                        }
+                      }),
                 ],
               )
             ],
@@ -229,7 +411,23 @@ class _DriverHomePageState extends State<DriverHomePage> {
 class SingleDeliveryRequest extends StatelessWidget {
   const SingleDeliveryRequest({
     Key? key,
+    required this.address,
+    required this.price,
+    required this.date,
+    required this.vehicles,
+    required this.image,
+    required this.name,
+    required this.docid,
+    required this.requestId,
   }) : super(key: key);
+  final String address;
+  final String price;
+  final String date;
+  final String vehicles;
+  final String image;
+  final String name;
+  final String docid;
+  final String requestId;
 
   @override
   Widget build(BuildContext context) {
@@ -260,11 +458,11 @@ class SingleDeliveryRequest extends StatelessWidget {
                         child: SvgPicture.asset('assets/icons/location.svg',
                             fit: BoxFit.contain),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          'Juja, Kikuyu',
-                          style: TextStyle(
+                          address,
+                          style: const TextStyle(
                               color: Color(0xFF000000),
                               fontFamily: 'PublicSans',
                               fontWeight: FontWeight.w400,
@@ -275,11 +473,11 @@ class SingleDeliveryRequest extends StatelessWidget {
                         height: 20,
                         width: MediaQuery.of(context).size.width * 0.5730133,
                         color: Colors.transparent,
-                        child: const Align(
+                        child: Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '\$90/day',
-                            style: TextStyle(
+                            '\$$price/day',
+                            style: const TextStyle(
                                 color: Color(0xFF000000),
                                 fontFamily: 'PublicSans',
                                 fontWeight: FontWeight.w600,
@@ -300,11 +498,11 @@ class SingleDeliveryRequest extends StatelessWidget {
                         child: SvgPicture.asset('assets/icons/calendar.svg',
                             fit: BoxFit.contain),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          '16/02/2022',
-                          style: TextStyle(
+                          date,
+                          style: const TextStyle(
                               color: Color(0xFF000000),
                               fontFamily: 'PublicSans',
                               fontWeight: FontWeight.w400,
@@ -324,11 +522,11 @@ class SingleDeliveryRequest extends StatelessWidget {
                         child: SvgPicture.asset('assets/icons/truck.svg',
                             fit: BoxFit.contain),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          '22Vehicle',
-                          style: TextStyle(
+                          '$vehicles Vehicle(s)',
+                          style: const TextStyle(
                               color: Color(0xFF000000),
                               fontFamily: 'PublicSans',
                               fontWeight: FontWeight.w400,
@@ -355,36 +553,49 @@ class SingleDeliveryRequest extends StatelessWidget {
                           ])),
                   child: Row(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(
+                      Padding(
+                        padding: const EdgeInsets.only(
                             left: 8.0, top: 12, bottom: 12, right: 10),
                         child: CircleAvatar(
+                          backgroundColor: const Color(0xFFF4F4F4),
                           radius: 20,
-                          backgroundImage:
-                              AssetImage('assets/images/woman.jpg'),
+                          backgroundImage: NetworkImage(image),
                         ),
                       ),
-                      const Text(
-                        'Wade Warren',
-                        style: TextStyle(
+                      Text(
+                        name,
+                        style: const TextStyle(
                             color: Color(0xFF000000),
                             fontFamily: 'PublicSans',
                             fontWeight: FontWeight.w400,
                             fontSize: 18),
                       ),
-                      Container(
-                        width: MediaQuery.of(context).size.width * 0.30666666,
-                        height: MediaQuery.of(context).size.height * 0.02987684,
-                        color: Colors.transparent,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: SizedBox(
-                            height:
-                                MediaQuery.of(context).size.height * 0.02987684,
-                            width: MediaQuery.of(context).size.width *
-                                0.0693333333,
-                            child: SvgPicture.asset('assets/icons/text.svg',
-                                fit: BoxFit.contain),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => QuickChatDetails(
+                                        userID: requestId,
+                                        name: name,
+                                        avatarUrl: image,
+                                      )));
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.30666666,
+                          height:
+                              MediaQuery.of(context).size.height * 0.02987684,
+                          color: Colors.transparent,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height *
+                                  0.02987684,
+                              width: MediaQuery.of(context).size.width *
+                                  0.0693333333,
+                              child: SvgPicture.asset('assets/icons/text.svg',
+                                  fit: BoxFit.contain),
+                            ),
                           ),
                         ),
                       )
@@ -396,50 +607,103 @@ class SingleDeliveryRequest extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        height: MediaQuery.of(context).size.height * 0.05665024,
-                        width: MediaQuery.of(context).size.width * 0.312,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                colors: [
-                                  Color(0xFFFF9595),
-                                  Color(0xFFFF9595),
-                                ])),
-                        child: const Center(
-                          child: Text(
-                            'Decline',
-                            style: TextStyle(
-                                color: Color(0xFFFFFFFF),
-                                fontFamily: 'PublicSans',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 18),
+                      InkWell(
+                        onTap: () async {
+                          final docRef = FirebaseFirestore.instance
+                              .collection("users")
+                              .doc(AuthenticationHelper().userid.trim())
+                              .collection('requests')
+                              .doc(docid);
+
+                          await docRef.update({
+                            'status': 'decline',
+                          });
+                        },
+                        child: Container(
+                          height:
+                              MediaQuery.of(context).size.height * 0.05665024,
+                          width: MediaQuery.of(context).size.width * 0.312,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              gradient: const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  colors: [
+                                    Color(0xFFFF9595),
+                                    Color(0xFFFF9595),
+                                  ])),
+                          child: const Center(
+                            child: Text(
+                              'Decline',
+                              style: TextStyle(
+                                  color: Color(0xFFFFFFFF),
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 18),
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(
                         width: 20,
                       ),
-                      Container(
-                        height: MediaQuery.of(context).size.height * 0.05665024,
-                        width: MediaQuery.of(context).size.width * 0.312,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                colors: [
-                                  Color(0xFF7CD956),
-                                  Color(0xFF3EA334),
-                                ])),
-                        child: const Center(
-                          child: Text(
-                            'Accept',
-                            style: TextStyle(
-                                color: Color(0xFFFFFFFF),
-                                fontFamily: 'PublicSans',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 18),
+                      InkWell(
+                        onTap: () async {
+                          final docRef = FirebaseFirestore.instance
+                              .collection("users")
+                              .doc(AuthenticationHelper().userid.trim())
+                              .collection('requests')
+                              .doc(docid);
+
+                          await docRef.update({
+                            'status': 'accept',
+                          });
+
+                          final docRef2 = FirebaseFirestore.instance
+                              .collection("users")
+                              .doc(AuthenticationHelper().userid.trim())
+                              .collection('orders');
+
+                          await docRef2.add({
+                            'date': DateTime.now(),
+                            'total': price,
+                            'shippingfee': '0.00',
+                            'ordernote': '',
+                            'items': [
+                              {
+                                'imageUrl': image,
+                                'name': name,
+                                'price': price,
+                                'qty': '1',
+                                'subtotal': price
+                              }
+                            ],
+                            'address': {'description': address},
+                            'payment': 'unpaid',
+                            'status': 'pending',
+                            'type': 'driver'
+                          });
+                        },
+                        child: Container(
+                          height:
+                              MediaQuery.of(context).size.height * 0.05665024,
+                          width: MediaQuery.of(context).size.width * 0.312,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              gradient: const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  colors: [
+                                    Color(0xFF7CD956),
+                                    Color(0xFF3EA334),
+                                  ])),
+                          child: const Center(
+                            child: Text(
+                              'Accept',
+                              style: TextStyle(
+                                  color: Color(0xFFFFFFFF),
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 18),
+                            ),
                           ),
                         ),
                       ),
@@ -458,8 +722,25 @@ class SingleDeliveryRequest extends StatelessWidget {
 class SinglePastOrderForDriver extends StatelessWidget {
   const SinglePastOrderForDriver({
     Key? key,
+    required this.address,
+    required this.items,
+    required this.ordernote,
+    required this.payment,
+    required this.shippingfee,
+    required this.status,
+    required this.total,
+    required this.date,
+    required this.refernce,
   }) : super(key: key);
-
+  final Map address;
+  final List items;
+  final String ordernote;
+  final String payment;
+  final String shippingfee;
+  final String status;
+  final String total;
+  final DateTime date;
+  final String refernce;
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -478,12 +759,12 @@ class SinglePastOrderForDriver extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 10.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Padding(
-                      padding: EdgeInsets.only(left: 12.0),
+                      padding: const EdgeInsets.only(left: 12.0),
                       child: Text(
-                        'ORDER ID #125288767',
-                        style: TextStyle(
+                        'ORDER ID $refernce',
+                        style: const TextStyle(
                             color: Color(0xFF000000),
                             fontFamily: 'PublicSans',
                             fontWeight: FontWeight.w400,
@@ -491,10 +772,10 @@ class SinglePastOrderForDriver extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.only(right: 11.0),
+                      padding: const EdgeInsets.only(right: 11.0),
                       child: Text(
-                        '\$347.00',
-                        style: TextStyle(
+                        '\$$total',
+                        style: const TextStyle(
                             color: Color(0xFF000000),
                             fontFamily: 'PublicSans',
                             fontWeight: FontWeight.w400,
@@ -509,11 +790,11 @@ class SinglePastOrderForDriver extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 12.0),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12.0),
                       child: Text(
-                        'Total Items: 2',
-                        style: TextStyle(
+                        'Total Items: ${items.length.toString()}',
+                        style: const TextStyle(
                             color: Color(0xFF000000),
                             fontFamily: 'PublicSans',
                             fontWeight: FontWeight.w400,
@@ -522,24 +803,42 @@ class SinglePastOrderForDriver extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 11.0),
-                      child: Row(
-                        children: const [
-                          Text(
-                            'View',
-                            style: TextStyle(
-                                color: Color(0xFF000000),
-                                fontFamily: 'PublicSans',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 12),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 5.0),
-                            child: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 15,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => DriverOrderDetails(
+                                        address: address,
+                                        items: items,
+                                        payment: payment,
+                                        shippingfee: shippingfee,
+                                        status: status,
+                                        total: total,
+                                        date: date,
+                                        refernce: refernce,
+                                        ordernote: ordernote,
+                                      )));
+                        },
+                        child: Row(
+                          children: const [
+                            Text(
+                              'View',
+                              style: TextStyle(
+                                  color: Color(0xFF000000),
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 12),
                             ),
-                          )
-                        ],
+                            Padding(
+                              padding: EdgeInsets.only(left: 5.0),
+                              child: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 15,
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -564,10 +863,10 @@ class SinglePastOrderForDriver extends StatelessWidget {
                                 Color(0xFF7CD956),
                                 Color(0xFF3EA334),
                               ])),
-                      child: const Center(
+                      child: Center(
                         child: Text(
-                          'Complete',
-                          style: TextStyle(
+                          status,
+                          style: const TextStyle(
                               color: Color(0xFFFFFFFF),
                               fontFamily: 'PublicSans',
                               fontWeight: FontWeight.w400,

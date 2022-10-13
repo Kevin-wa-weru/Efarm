@@ -8,11 +8,11 @@ class TimeDayes {
 }
 
 List<TimeDayes> allDayes = [
-  TimeDayes('Mon', true, '07:00am', '05:00 pm'),
-  TimeDayes('Tue', false, '07:00am', '05:00 pm'),
-  TimeDayes('Wed', false, '07:00am', '05:00 pm'),
-  TimeDayes('Thu', true, '07:00am', '05:00 pm'),
-  TimeDayes('Fri', true, '07:00am', '05:00 pm'),
-  TimeDayes('Sat', false, '07:00am', '05:00 pm'),
-  TimeDayes('Sun', true, '07:00am', '05:00 pm'),
+  TimeDayes('Mon', false, '00:00am', '00:00 pm'),
+  TimeDayes('Tue', false, '00:00am', '00:00 pm'),
+  TimeDayes('Wed', false, '00:00am', '00:00 pm'),
+  TimeDayes('Thu', false, '00:00am', '00:00 pm'),
+  TimeDayes('Fri', false, '00:00am', '00:00 pm'),
+  TimeDayes('Sat', false, '00:00am', '00:00 pm'),
+  TimeDayes('Sun', false, '00:00am', '00:00 pm'),
 ];

@@ -122,6 +122,7 @@ class _SetEndLocationOnMapState extends State<SetEndLocationOnMap> {
                                   end: selectedLocation,
                                   destination: selectedAddress.toString(),
                                   origin: widget.startAddress,
+                                  address: widget.startAddress,
                                 )));
                   }
                 },

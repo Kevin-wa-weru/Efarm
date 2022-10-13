@@ -13,54 +13,58 @@ class Orders extends StatefulWidget {
 
 class _OrdersState extends State<Orders> {
   String selectedOrder = 'current';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        title: Column(
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
-            ),
-            widget.showbackArrow == false
-                ? const Center(
-                    child: Text(
-                      'Current Orders',
-                      style: TextStyle(
-                          color: Color(0xFF000000),
-                          fontFamily: 'PublicSans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18),
-                    ),
-                  )
-                : Row(
-                    children: [
-                      InkWell(
-                        onTap: () => Navigator.pop(context),
-                        child: const Icon(
-                          Icons.arrow_back_ios,
-                          size: 20,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.168,
-                      ),
-                      const Text(
-                        'My Orders',
-                        style: TextStyle(
-                            color: Color(0xFF000000),
-                            fontFamily: 'PublicSans',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18),
-                      ),
-                    ],
+        automaticallyImplyLeading: false,
+        centerTitle: false,
+        title: widget.showbackArrow == false
+            ? const Center(
+                child: Text(
+                  'Current Orders',
+                  style: TextStyle(
+                      color: Color(0xFF000000),
+                      fontFamily: 'PublicSans',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18),
+                ),
+              )
+            : Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.053333333,
                   ),
-          ],
-        ),
+                  InkWell(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      height: 60,
+                      width: 60,
+                      color: Colors.transparent,
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.black,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.20,
+                  ),
+                  const Text(
+                    'My Orders',
+                    style: TextStyle(
+                        color: Color(0xFF000000),
+                        fontFamily: 'PublicSans',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18),
+                  ),
+                ],
+              ),
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark
@@ -163,17 +167,36 @@ class _OrdersState extends State<Orders> {
               height: MediaQuery.of(context).size.height * 0.029556650,
             ),
             selectedOrder == 'current'
-                ? Expanded(
-                    child: StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(AuthenticationHelper().userid.trim())
-                            .collection('orders')
-                            .where('status', isEqualTo: 'pending')
-                            .snapshots(),
-                        builder: (context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData) {
-                            return ListView.builder(
+                ? StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(AuthenticationHelper().userid.trim())
+                        .collection('orders')
+                        .where('status', isEqualTo: 'pending')
+                        .snapshots(),
+                    builder: (context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData) {
+                        if (snapshot.data.docs.isEmpty) {
+                          return Expanded(
+                            child: Center(
+                              child: Container(
+                                height: MediaQuery.of(context).size.height *
+                                    0.3275862,
+                                width:
+                                    MediaQuery.of(context).size.width * 0.70933,
+                                color: Colors.transparent,
+                                child: Image.asset(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.3275862,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.70933,
+                                    'assets/images/Empty.gif'),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Expanded(
+                            child: ListView.builder(
                               scrollDirection: Axis.vertical,
                               itemCount: snapshot.data!.docs.length,
                               itemBuilder: (BuildContext context, int index) {
@@ -197,23 +220,56 @@ class _OrdersState extends State<Orders> {
                                       snapshot.data!.docs[index].reference.id,
                                 );
                               },
-                            );
-                          } else {
-                            return Container();
-                          }
-                        }),
-                  )
-                : Expanded(
-                    child: StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(AuthenticationHelper().userid.trim())
-                            .collection('orders')
-                            .where('status', isEqualTo: 'complete')
-                            .snapshots(),
-                        builder: (context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData) {
-                            return ListView.builder(
+                            ),
+                          );
+                        }
+                      } else {
+                        print(
+                            'Hoooooooooooooooooooooooooooooooooonnnnnnnoossss data');
+                        return Container(
+                          height:
+                              MediaQuery.of(context).size.height * 0.3275862,
+                          width: MediaQuery.of(context).size.width * 0.70933,
+                          color: Colors.red,
+                          child: Image.asset(
+                              height: MediaQuery.of(context).size.height *
+                                  0.3275862,
+                              width:
+                                  MediaQuery.of(context).size.width * 0.70933,
+                              'assets/images/Empty.gif'),
+                        );
+                      }
+                    })
+                : StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(AuthenticationHelper().userid.trim())
+                        .collection('orders')
+                        .where('status', isEqualTo: 'complete')
+                        .snapshots(),
+                    builder: (context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData) {
+                        if (snapshot.data.docs.isEmpty) {
+                          return Expanded(
+                            child: Center(
+                              child: Container(
+                                height: MediaQuery.of(context).size.height *
+                                    0.3275862,
+                                width:
+                                    MediaQuery.of(context).size.width * 0.70933,
+                                color: Colors.transparent,
+                                child: Image.asset(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.3275862,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.70933,
+                                    'assets/images/Empty.gif'),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Expanded(
+                            child: ListView.builder(
                               scrollDirection: Axis.vertical,
                               itemCount: snapshot.data!.docs.length,
                               itemBuilder: (BuildContext context, int index) {
@@ -237,12 +293,20 @@ class _OrdersState extends State<Orders> {
                                       snapshot.data!.docs[index].reference.id,
                                 );
                               },
-                            );
-                          } else {
-                            return Container();
-                          }
-                        }),
-                  )
+                            ),
+                          );
+                        }
+                      } else {
+                        return SizedBox(
+                          child: Image.asset(
+                              height: MediaQuery.of(context).size.height *
+                                  0.3275862,
+                              width:
+                                  MediaQuery.of(context).size.width * 0.70933,
+                              'assets/images/Empty.gif'),
+                        );
+                      }
+                    })
           ],
         ),
       ),
