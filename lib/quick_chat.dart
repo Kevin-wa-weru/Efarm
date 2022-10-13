@@ -1,11 +1,13 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eshamba/services/cruds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class ChatDetails extends StatefulWidget {
-  const ChatDetails(
+class QuickChatDetails extends StatefulWidget {
+  const QuickChatDetails(
       {Key? key,
       required this.userID,
       required this.name,
@@ -16,17 +18,11 @@ class ChatDetails extends StatefulWidget {
   final String avatarUrl;
 
   @override
-  State<ChatDetails> createState() => _ChatDetailsState();
+  State<QuickChatDetails> createState() => _QuickChatDetailsState();
 }
 
-class _ChatDetailsState extends State<ChatDetails> {
+class _QuickChatDetailsState extends State<QuickChatDetails> {
   final chatController = TextEditingController();
-
-  @override
-  void initState() {
-    print(widget.userID);
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,34 +52,32 @@ class _ChatDetailsState extends State<ChatDetails> {
                   padding: const EdgeInsets.only(left: 20.0),
                   child: Row(
                     children: [
-                      Container(
-                        child: widget.avatarUrl == ''
-                            ? Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(100),
-                                  color: const Color(0xFFE8E8E8),
-                                ),
-                                child: Center(
-                                  child: SizedBox(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.0147783251,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.03,
-                                    child: SvgPicture.asset(
-                                        'assets/icons/user.svg',
-                                        color: Colors.black12,
-                                        fit: BoxFit.contain),
-                                  ),
-                                ),
-                              )
-                            : CircleAvatar(
-                                radius: MediaQuery.of(context).size.height *
-                                    0.023251231,
-                                backgroundImage: NetworkImage(widget.avatarUrl),
+                      widget.avatarUrl == ''
+                          ? Container(
+                              height: 40,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(100),
+                                color: const Color(0xFFE8E8E8),
                               ),
-                      ),
+                              child: Center(
+                                child: SizedBox(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.0147783251,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.03,
+                                  child: SvgPicture.asset(
+                                      'assets/icons/user.svg',
+                                      color: Colors.black12,
+                                      fit: BoxFit.contain),
+                                ),
+                              ),
+                            )
+                          : CircleAvatar(
+                              radius: MediaQuery.of(context).size.height *
+                                  0.023251231,
+                              backgroundImage: NetworkImage(widget.avatarUrl),
+                            ),
                       Padding(
                         padding: const EdgeInsets.only(left: 10.0),
                         child: Column(
@@ -144,9 +138,16 @@ class _ChatDetailsState extends State<ChatDetails> {
                     ));
                   } else {
                     if (snapshot.data.docs.length < 1) {
-                      return const Center(
-                        child: Text('NO messages'),
-                      );
+                      return Expanded(
+                          child: ListView.builder(
+                        reverse: true,
+                        scrollDirection: Axis.vertical,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: 10,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Container();
+                        },
+                      ));
                     } else {
                       return Expanded(
                           child: ListView.builder(
@@ -307,12 +308,14 @@ class _ChatDetailsState extends State<ChatDetails> {
                                               'message': chatController.text,
                                             });
 
-                                            await latestMessage.update({
+                                            await latestMessage.set({
+                                              'avatarUrl': widget.avatarUrl,
+                                              'name': widget.name,
                                               'message': chatController.text,
-                                              'userId':
-                                                  AuthenticationHelper().userid,
+                                              'id': widget.userID.trim(),
                                               'time': DateTime.now()
                                             });
+
                                             chatController.clear();
                                           }
                                         },

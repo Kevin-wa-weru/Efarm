@@ -1,10 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:eshamba/services/cruds.dart';
 import 'package:eshamba/show_off_workplace_two.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:provider/provider.dart';
 
 class ShowWorkPlaceOne extends StatefulWidget {
   const ShowWorkPlaceOne({Key? key}) : super(key: key);
@@ -22,9 +24,6 @@ class _ShowWorkPlaceOneState extends State<ShowWorkPlaceOne> {
   File? fileTodisplay;
   void pickfile() async {
     try {
-      setState(() {
-        appisLoading = true;
-      });
       result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['png', 'pdf', 'jpg', 'jpeg'],
@@ -50,22 +49,49 @@ class _ShowWorkPlaceOneState extends State<ShowWorkPlaceOne> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: InkWell(
-        onTap: () {
+        onTap: () async {
           if (pickedfile == null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                   content: Text(
-                "Complete Uploading the image",
+                "Provide a picture of your workplace",
                 style: TextStyle(
                   color: Colors.red,
                 ),
               )),
             );
           } else {
+            setState(() {
+              appisLoading = true;
+            });
+            FirebaseStorage firebaseStorage = FirebaseStorage.instance;
+
+            var response = await firebaseStorage
+                .ref('farms')
+                .child(
+                    '${DateTime.now().microsecond.toString()}${DateTime.now().second.toString()}')
+                .putFile(fileTodisplay!);
+
+            final docRef = FirebaseFirestore.instance
+                .collection("users")
+                .doc(AuthenticationHelper().userid.trim());
+
+            var downloadUrl = await response.ref.getDownloadURL();
+            await docRef.update({
+              'workPlace': {'image': downloadUrl}
+            });
+
+            setState(() {
+              appisLoading = false;
+            });
+
+            // ignore: use_build_context_synchronously
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const ShowWorkPlaceTwo()));
+                    builder: (context) => ShowWorkPlaceTwo(
+                          image: downloadUrl,
+                        )));
           }
         },
         child: Padding(
@@ -80,16 +106,26 @@ class _ShowWorkPlaceOneState extends State<ShowWorkPlaceOne> {
                   Color(0xFF7CD956),
                   Color(0xFF3EA334),
                 ])),
-            child: const Center(
-              child: Text(
-                'Continue',
-                style: TextStyle(
-                    color: Color(0xFFFFFFFF),
-                    fontFamily: 'PublicSans',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16),
-              ),
-            ),
+            child: appisLoading == true
+                ? const Center(
+                    child: SizedBox(
+                      height: 15,
+                      width: 15,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : const Center(
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontFamily: 'PublicSans',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16),
+                    ),
+                  ),
           ),
         ),
       ),

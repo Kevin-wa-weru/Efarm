@@ -130,6 +130,43 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: false,
+        title: Row(
+          children: [
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.053333333,
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                height: 60,
+                width: 60,
+                color: Colors.transparent,
+                child: const Icon(
+                  Icons.arrow_back_ios,
+                  color: Colors.black,
+                  size: 20,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.15,
+            ),
+            const Text(
+              'Enter Location',
+              style: TextStyle(
+                  color: Color(0xFF000000),
+                  fontFamily: 'PublicSans',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
       floatingActionButton: InkWell(
         onTap: () {
           Navigator.push(
@@ -166,33 +203,8 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
             .copyWith(statusBarColor: Colors.transparent),
         child: ListView(
           children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.053333333,
-                ),
-                InkWell(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(
-                    Icons.arrow_back_ios,
-                    size: 20,
-                  ),
-                ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.268,
-                ),
-                const Text(
-                  'Enter Location',
-                  style: TextStyle(
-                      color: Color(0xFF000000),
-                      fontFamily: 'PublicSans',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18),
-                ),
-              ],
-            ),
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.0581773399,
+              height: MediaQuery.of(context).size.height * 0.0201333,
             ),
             Card(
               child: SizedBox(
@@ -470,6 +482,7 @@ class _BookLorryStep1State extends State<BookLorryStep1> {
                                   end: endPoint!,
                                   destination: endLocation,
                                   origin: startLocation,
+                                  address: startLocation,
                                 )));
                   }
                 },

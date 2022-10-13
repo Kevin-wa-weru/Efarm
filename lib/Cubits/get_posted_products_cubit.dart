@@ -27,5 +27,6 @@ class GetPostedProductsCubit extends Cubit<GetPostedProductsState> {
 
       emit(GetPostedProductsState.loaded(allProducts));
     });
+    allProducts = [];
   }
 }

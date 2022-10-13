@@ -27,6 +27,13 @@ class _RegistrationState extends State<Registration> {
   bool obsecurePasswordOne = true;
   bool obsecurePasswordTwo = true;
   bool appIsLoading = false;
+
+  @override
+  void initState() {
+    print(widget.usertype);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -457,7 +464,7 @@ class _RegistrationState extends State<Registration> {
                                 appIsLoading = true;
                               });
                               await AuthenticationHelper()
-                                  .signUp(
+                                  .signUpUser(
                                       email: emailController.text,
                                       password: passwordTwoController.text,
                                       name: nameController.text,
@@ -491,7 +498,7 @@ class _RegistrationState extends State<Registration> {
                                 appIsLoading = true;
                               });
                               await AuthenticationHelper()
-                                  .signUp(
+                                  .signUpVendor(
                                       email: emailController.text,
                                       password: passwordTwoController.text,
                                       name: nameController.text,
@@ -525,7 +532,7 @@ class _RegistrationState extends State<Registration> {
                                 appIsLoading = true;
                               });
                               await AuthenticationHelper()
-                                  .signUp(
+                                  .signUpDriver(
                                       email: emailController.text,
                                       password: passwordTwoController.text,
                                       name: nameController.text,

@@ -44,80 +44,99 @@ class _CartState extends State<Cart> {
                         .snapshots(),
                     builder: (context, AsyncSnapshot snapshot) {
                       if (snapshot.hasData) {
-                        return ListView.builder(
-                          scrollDirection: Axis.vertical,
-                          itemCount: snapshot.data!.docs.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return CartItem(
-                              name: snapshot.data!.docs[index]['name'],
-                              price: snapshot.data!.docs[index]['subtotal'],
-                              qty: snapshot.data!.docs[index]['qty'],
-                              image: snapshot.data!.docs[index]['imageUrl'],
-                            );
-                          },
-                        );
+                        if (snapshot.data.docs.isEmpty) {
+                          return Center(
+                            child: Container(
+                              height: MediaQuery.of(context).size.height *
+                                  0.3275862,
+                              width:
+                                  MediaQuery.of(context).size.width * 0.70933,
+                              color: Colors.transparent,
+                              child: Image.asset(
+                                  height: MediaQuery.of(context).size.height *
+                                      0.3275862,
+                                  width: MediaQuery.of(context).size.width *
+                                      0.70933,
+                                  'assets/images/Empty.gif'),
+                            ),
+                          );
+                        } else {
+                          return ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            itemCount: snapshot.data!.docs.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return CartItem(
+                                name: snapshot.data!.docs[index]['name'],
+                                price: snapshot.data!.docs[index]['subtotal'],
+                                qty: snapshot.data!.docs[index]['qty'],
+                                image: snapshot.data!.docs[index]['imageUrl'],
+                              );
+                            },
+                          );
+                        }
                       } else {
                         return Container();
                       }
                     })),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const CheckOut()));
-                  },
-                  child: Container(
-                    height: MediaQuery.of(context).size.height * 0.0615763,
-                    width: MediaQuery.of(context).size.width * 0.8933333,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25),
-                        gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            colors: [
-                              Color(0xFF7CD956),
-                              Color(0xFF3EA334),
-                            ])),
-                    child: Center(
-                      child: StreamBuilder(
-                          stream: FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(AuthenticationHelper().userid.trim())
-                              .collection('cart')
-                              .snapshots(),
-                          builder: (context, AsyncSnapshot snapshot) {
-                            late String total = '';
-                            List allsubTotals = [];
-                            if (snapshot.hasData) {
-                              for (var doc in snapshot.data.docs) {
-                                allsubTotals.add(double.parse(doc['subtotal']));
-                              }
+            StreamBuilder<Object>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(AuthenticationHelper().userid.trim())
+                    .collection('cart')
+                    .snapshots(),
+                builder: (context, AsyncSnapshot snapshot) {
+                  late String total = '';
+                  List allsubTotals = [];
 
-                              total = allsubTotals
-                                  .reduce((value, current) => value + current)
-                                  .toStringAsFixed(2);
-
-                              return Text(
+                  if (snapshot.hasData) {
+                    if (allsubTotals.isEmpty) {
+                      return Container();
+                    } else {
+                      total = allsubTotals
+                          .reduce((value, current) => value + current)
+                          .toStringAsFixed(2);
+                      return Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const CheckOut()));
+                            },
+                            child: Container(
+                              height: MediaQuery.of(context).size.height *
+                                  0.0615763,
+                              width:
+                                  MediaQuery.of(context).size.width * 0.8933333,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      colors: [
+                                        Color(0xFF7CD956),
+                                        Color(0xFF3EA334),
+                                      ])),
+                              child: Center(
+                                  child: Text(
                                 'Continue : Total \$$total',
                                 style: const TextStyle(
                                     color: Color(0xFFFFFFFF),
                                     fontFamily: 'PublicSans',
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16),
-                              );
-                            } else {
-                              return Container();
-                            }
-                          }),
-                    ),
-                  ),
-                ),
-              ),
-            )
+                              )),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                  } else {
+                    return Container();
+                  }
+                })
           ],
         ),
       ),

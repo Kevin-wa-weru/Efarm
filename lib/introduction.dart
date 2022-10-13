@@ -1,6 +1,4 @@
 import 'package:eshamba/registration.dart';
-import 'package:eshamba/screens/driver/introduction.dart';
-import 'package:eshamba/vendor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';

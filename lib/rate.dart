@@ -14,22 +14,31 @@ class _RatingScreenState extends State<RatingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         centerTitle: false,
         title: Row(
           children: [
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.053333333,
+            ),
             InkWell(
               onTap: () => Navigator.pop(context),
-              child: const Icon(
-                Icons.arrow_back_ios,
-                size: 20,
-                color: Colors.black,
+              child: Container(
+                height: 60,
+                width: 60,
+                color: Colors.transparent,
+                child: const Icon(
+                  Icons.arrow_back_ios,
+                  color: Colors.black,
+                  size: 20,
+                ),
               ),
             ),
             SizedBox(
               width: MediaQuery.of(context).size.width * 0.128,
             ),
             const Text(
-              'Rate this app',
+              'Rate this App',
               style: TextStyle(
                   color: Color(0xFF000000),
                   fontFamily: 'PublicSans',

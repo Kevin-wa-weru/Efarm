@@ -83,39 +83,40 @@ class _UpdateProfileState extends State<UpdateProfile> {
         child: Column(
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.093251,
+              height: MediaQuery.of(context).size.width * 0.128,
             ),
-            Column(
+            Row(
               children: [
-                Row(
-                  children: [
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.053333333,
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.053333333,
+                ),
+                InkWell(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    height: 60,
+                    width: 60,
+                    color: Colors.transparent,
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 20,
                     ),
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.arrow_back_ios,
-                        size: 20,
-                      ),
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.368,
-                    ),
-                    const Text(
-                      'Edit',
-                      style: TextStyle(
-                          color: Color(0xFF000000),
-                          fontFamily: 'PublicSans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18),
-                    ),
-                  ],
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.27,
+                ),
+                const Text(
+                  'Edit',
+                  style: TextStyle(
+                      color: Color(0xFF000000),
+                      fontFamily: 'PublicSans',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18),
                 ),
               ],
             ),
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.05788177,
+              height: MediaQuery.of(context).size.height * 0.024039408,
             ),
             InkWell(
               onTap: () async {
